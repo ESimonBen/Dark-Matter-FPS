@@ -1,0 +1,9 @@
+.vs
+*.bat
+bin/
+bin-int/
+
+**.vcxproj
+**.user
+**filters
+*.sln
