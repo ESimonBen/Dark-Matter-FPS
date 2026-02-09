@@ -1,10 +1,5 @@
 #pragma once
 #include "Window.h"
-#include "Events/KeyEvent.h"
-#include "Events/MouseEvent.h"
-#include "Events/ApplicationEvent.h"
-#include "Scene/Camera.h"
-#include "Input/CameraController.h"
 #include "Scene/Scene.h"
 #include <memory>
 
@@ -26,11 +21,9 @@ namespace Core {
 
 	private:
 		std::unique_ptr<Window> window;
-		std::unique_ptr<Camera> camera;
-		std::unique_ptr<CameraController> controller;
-		std::unique_ptr<Renderer> renderer;
 		std::unique_ptr<Scene> scene;
 		float m_LastFrameTime = 0;
 		float m_DeltaTime = 0;
+		Renderer renderer;
 	};
 }

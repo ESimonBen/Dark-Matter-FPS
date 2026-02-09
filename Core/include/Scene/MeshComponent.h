@@ -1,0 +1,16 @@
+#pragma once
+#include <memory>
+#include "Rendering/Mesh.h"
+#include "Rendering/ShaderProgram.h"
+
+namespace Core {
+	struct MeshComponent {
+		MeshComponent() = default;
+		MeshComponent(std::unique_ptr<Mesh> mesh, std::shared_ptr<ShaderProgram> program)
+			: m_Mesh(std::move(mesh)), m_Program(program)
+		{}
+
+		std::shared_ptr<ShaderProgram> m_Program;
+		std::unique_ptr<Mesh> m_Mesh;
+	};
+}

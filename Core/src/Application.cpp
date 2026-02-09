@@ -6,6 +6,8 @@
 #include "Rendering/ShaderProgram.h"
 #include "Rendering/Mesh.h"
 #include "Scene/Scene.h"
+#include "Scripting/CameraControllerScript.h"
+#include "Input/Input.h"
 
 namespace Core {
 	Application::Application() {
@@ -17,19 +19,37 @@ namespace Core {
 	}
 
 	void Application::OnInit() {
-		window = std::make_unique<Window>(960, 720, "Dark Matter");
-		camera = std::make_unique<Camera>(Vec3{ 0.0f, 0.0f, 3.0f }, Vec3{ 0.0f, 1.0f, 0.0f }, glm::pi<float>() / 4.0f, window->GetWidth(), window->GetHeight(), 0.1f, 100.0f);
-		controller = std::make_unique<CameraController>(*camera, *window);
+		window = std::make_unique<Window>(1280, 720, "Dark Matter");
 		scene = std::make_unique<Scene>();
-		renderer = std::make_unique<Renderer>();
+		Entity cameraEntity = scene->CreateEntity();
+		Camera& camera = scene->CreateCamera(cameraEntity, glm::pi<float>() / 4.0f, window->GetWidth(), window->GetHeight(), 0.1f, 100.0f);
+		scene->AttachScript<CameraControllerScript>(cameraEntity);
+		scene->SetActiveCamera(cameraEntity);
 	}
 
 	void Application::OnEvent(Event& event) {
-		controller->OnEvent(event);
+		EventDispatcher dispatcher(event);
+
+		dispatcher.TryDispatch<WindowResizeEvent>( [this](WindowResizeEvent& e) {
+				glViewport(0, 0, e.GetWidth(), e.GetHeight());
+				scene->OnWindowResize(e);
+				return false;
+		});
+
+		scene->OnEvent(event);
 	}
 
 	void Application::OnUpdate(float dt) {
-		controller->OnUpdate(dt);
+		static bool lastLocked = scene->IsCursorLocked();
+
+		bool locked = scene->IsCursorLocked();
+		if (locked != lastLocked) {
+			window->SetCursorMode(
+				locked ? CursorMode::Disabled : CursorMode::Normal
+			);
+			lastLocked = locked;
+		}
+
 		scene->OnUpdate(dt);
 	}
 
@@ -51,7 +71,8 @@ namespace Core {
 
 			window->PollEvents();
 			OnUpdate(m_DeltaTime);
-			scene->OnRender(*renderer, *camera);
+			scene->OnRender(renderer);
+			Input::EndFrame();
 
 			window->SwapBuffers();
 		}
@@ -117,12 +138,19 @@ namespace Core {
 		Shader vert{ "assets/shaders/vertex.glsl", ShaderType::Vertex };
 		Shader frag{ "assets/shaders/fragment.glsl", ShaderType::Fragment };
 		Mesh mesh{ vertices, sizeof(vertices), indices, sizeof(indices) };
-		ShaderProgram shader_program;
-		shader_program.Attach(vert);
-		shader_program.Attach(frag);
-		shader_program.Link();
+		Mesh mesh2{ vertices, sizeof(vertices), indices, sizeof(indices) };
 
-		Entity cube = scene->CreateEntity();
-		scene->AttachMesh(cube, std::make_unique<Mesh>(std::move(mesh)), std::make_unique<ShaderProgram>(std::move(shader_program)));
+		auto shaderProgram = std::make_shared<ShaderProgram>();
+		shaderProgram->Attach(vert);
+		shaderProgram->Attach(frag);
+		shaderProgram->Link();
+
+		Entity cube1 = scene->CreateEntity();
+		cube1.GetTransform().position = {1.0f, 0.0f, -3.0f};
+		scene->AttachMesh(cube1, std::make_unique<Mesh>(std::move(mesh)), shaderProgram);
+
+		Entity cube2 = scene->CreateEntity();
+		cube2.GetTransform().position = {-1.0f, 0.0f, -3.0f};
+		scene->AttachMesh(cube2, std::make_unique<Mesh>(std::move(mesh2)), shaderProgram);
 	}
 }

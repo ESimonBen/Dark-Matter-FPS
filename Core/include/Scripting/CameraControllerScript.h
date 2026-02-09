@@ -4,16 +4,9 @@
 #include "Events/MouseEvent.h"
 #include "Events/ApplicationEvent.h"
 #include "Window.h"
+#include "Scripting/ScriptableEntity.h"
 
 namespace Core {
-	struct KeyBoardMovement {
-		bool forward = false;
-		bool backward = false;
-		bool right = false;
-		bool left = false;
-		bool up = false;
-		bool down = false;
-	};
 
 	struct MouseMovement {
 		float deltaX = 0.0f;
@@ -23,25 +16,19 @@ namespace Core {
 		bool first = true;
 	};
 
-	class CameraController {
+	class CameraControllerScript : public ScriptableEntity {
 	public:
-		CameraController(Camera& camera, Window& window);
-		void OnUpdate(float dt);
-		void OnEvent(Event& event);
+		void OnCreate() override;
+		void OnUpdate(float dt) override;
+		void OnEvent(Event& event) override;
+
+	private:
 		bool OnKeyPressEvent(KeyPressEvent& pressEvent);
 		bool OnKeyReleaseEvent(KeyReleaseEvent& releaseEvent);
 		bool OnMouseMoveEvent(MouseMoveEvent& mouseEvent);
-		bool OnWindowResizeEvent(WindowResizeEvent& resizeEvent);
 
-	private:
-		void ToggleCursor();
-
-		Camera& m_Camera;
-		Window& m_Window;
 		MouseMovement m_Mouse;
-		KeyBoardMovement m_Keyboard;
 		float m_Speed = 5.0f;
 		float m_Sensitivity = 0.005f;
-		bool m_CursorLocked = true;
 	};
 }

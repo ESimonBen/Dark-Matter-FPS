@@ -158,42 +158,4 @@ namespace Core {
 			return EventCategoryApplication;
 		}
 	};
-
-	class AppUpdateEvent : public Event {
-	public:
-		static EventType GetStaticType() {
-			return EventType::AppUpdate;
-		}
-
-		virtual EventType GetEventType() const override {
-			return GetStaticType();
-		}
-
-		virtual const char* GetName() const override {
-			return "AppUpdate";
-		}
-
-		virtual int GetCategoryFlags() const override {
-			return EventCategoryApplication;
-		}
-	};
-
-	class AppRenderEvent : public Event {
-	public:
-		static EventType GetStaticType() {
-			return EventType::AppRender;
-		}
-
-		virtual EventType GetEventType() const override {
-			return GetStaticType();
-		}
-
-		virtual const char* GetName() const override {
-			return "AppRender";
-		}
-
-		virtual int GetCategoryFlags() const override {
-			return EventCategoryApplication;
-		}
-	};
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include "Transform.h"
 #include <cstdint>
 
 namespace Core {
@@ -12,9 +13,16 @@ namespace Core {
 		Entity(EntityID id, Scene* scene);
 		EntityID GetID() const;
 		bool IsValid() const;
+		Scene* GetScene() const;
+
+		Transform& GetTransform();
+		bool HasMesh() const;
+
+		bool operator==(const Entity& other) const;
+		bool operator!=(const Entity& other) const;
 
 	private:
-		EntityID m_ID = 0;
 		Scene* m_Scene = nullptr;
+		EntityID m_ID = 0;
 	};
 }
