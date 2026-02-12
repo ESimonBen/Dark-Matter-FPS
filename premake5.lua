@@ -2,10 +2,44 @@ workspace "Dark Matter"
     architecture "x64"
     startproject "App"
 
-    configurations { "Debug", "Release", "Dist" }
+    configurations { "Debug", "Release", "Distribution" }
     outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- ===============================
+-- Jolt Physics Engine
+-- ===============================
+project "Jolt"
+    location "vendor/JoltPhysics"
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++17"
+    staticruntime "On"
+
+    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+    files {
+        "vendor/JoltPhysics/Jolt/**.cpp",
+        "vendor/JoltPhysics/Jolt/**.h"
+    }
+
+    includedirs {
+        "vendor/JoltPhysics"
+    }
+
+    filter "configurations:Debug"
+        runtime "Debug"
+        symbols "On"
+
+    filter "configurations:Release"
+        runtime "Release"
+        optimize "On"
+
+    filter "configurations:Distribution"
+        runtime "Release"
+        optimize "On"
+
+    -- ===============================
 -- Core Library
 -- ===============================
 project "Core"
@@ -14,6 +48,7 @@ project "Core"
     language "C++"
     warnings "Extra"
     cppdialect "C++23"
+    staticruntime "On"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -24,16 +59,16 @@ project "Core"
         "Core/include/**.hpp",
         "Core/src/**.cpp",
         "Core/src/**.cxx",
-        -- Optional: vendor headers in solution (read-only)
-        "vendor/OpenGL/GLFW/include/glfw3.h.h",
-        "vendor/OpenGL/GLEW-2.2/include/glew.h"
+        --"vendor/JoltPhysics/Jolt/**.h",
+        --"vendor/JoltPhysics/Jolt/**.cpp"
     }
 
     includedirs {
         "Core/include",
-        "Core/vendor/glm",
         "vendor/OpenGL/GLFW/include",
-        "vendor/OpenGL/GLEW-2.2/include"
+        "vendor/OpenGL/GLEW-2.2/include",
+        "vendor/OpenGL/glm",
+        "vendor/JoltPhysics"
     }
 
     defines { "GLFW_STATIC", "GLEW_STATIC" }
@@ -49,12 +84,30 @@ project "Core"
 
     filter "configurations:Debug"
         defines{"CORE_ENABLE_ASSERTS"}
+        libdirs {
+            "vendor/OpenGL/GLFW/lib-vc2022",
+            "vendor/OpenGL/GLEW-2.2/lib/Release/x64",
+            "vendor/JoltPhysics/Build/VS2022_CL/Debug"
+        }
+        runtime "Debug"
         symbols "On"
 
     filter "configurations:Release"
+        libdirs {
+            "vendor/OpenGL/GLFW/lib-vc2022",
+            "vendor/OpenGL/GLEW-2.2/lib/Release/x64",
+            "vendor/JoltPhysics/Build/VS2022_CL/Release"
+        }
+        runtime "Release"
         optimize "On"
 
-    filter "configurations:Dist"
+    filter "configurations:Distribution"
+        libdirs {
+            "vendor/OpenGL/GLFW/lib-vc2022",
+            "vendor/OpenGL/GLEW-2.2/lib/Release/x64",
+            "vendor/JoltPhysics/Build/VS2022_CL/Distribution"
+        }
+        runtime "Release"
         optimize "On"
 
 -- ===============================
@@ -66,6 +119,7 @@ project "App"
     language "C++"
     warnings "Extra"
     cppdialect "C++23"
+    staticruntime "On"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -76,27 +130,21 @@ project "App"
         "App/include/**.hpp",
         "App/src/**.cpp",
         "App/src/**.cxx",
-        "App/assets/**",
-        "vendor/OpenGL/GLFW/include/glfw3.h",
-        "vendor/OpenGL/GLEW-2.2/include/glew.h"
+        "App/assets/**"
     }
 
     includedirs {
         "App/include",
         "Core/include",
-        "Core/vendor/glm",
         "vendor/OpenGL/GLFW/include",
-        "vendor/OpenGL/GLEW-2.2/include"
+        "vendor/OpenGL/GLEW-2.2/include",
+        "vendor/OpenGL/glm",
+        "vendor/JoltPhysics"
     }
 
     defines { "GLFW_STATIC", "GLEW_STATIC" }
 
-    libdirs {
-        "vendor/OpenGL/GLFW/lib-vc2022",
-        "vendor/OpenGL/GLEW-2.2/lib/Release/x64"
-    }
-
-    links { "Core", "glew32s", "glfw3", "opengl32" }
+    links { "Core", "glew32s", "glfw3_mt", "opengl32", "Jolt" }
 
     -- Copy assets folder to output directory after build
     postbuildcommands {
@@ -104,9 +152,28 @@ project "App"
     }
 
     filter "configurations:Debug"
+        libdirs {
+            "vendor/OpenGL/GLFW/lib-vc2022",
+            "vendor/OpenGL/GLEW-2.2/lib/Release/x64",
+            "vendor/JoltPhysics/Build/VS2022_CL/Debug"
+        }
+        runtime "Debug"
         symbols "On"
-        libdirs { "vendor/OpenGL/GLEW-2.2/lib/Debug/x64" }
 
-    filter "configurations:Release or configurations:Dist"
+    filter "configurations:Release"
+        libdirs {
+            "vendor/OpenGL/GLFW/lib-vc2022",
+            "vendor/OpenGL/GLEW-2.2/lib/Release/x64",
+            "vendor/JoltPhysics/Build/VS2022_CL/Release"
+        }
+        runtime "Release"
         optimize "On"
-        libdirs { "vendor/OpenGL/GLEW-2.2/lib/Release/x64" }
+
+    filter "configurations:Distribution"
+        libdirs {
+            "vendor/OpenGL/GLFW/lib-vc2022",
+            "vendor/OpenGL/GLEW-2.2/lib/Release/x64",
+            "vendor/JoltPhysics/Build/VS2022_CL/Distribution"
+        }
+        runtime "Release"
+        optimize "On"

@@ -18,8 +18,14 @@ namespace Core {
 		Transform& t = GetCamera()->GetTransform();
 		Vec2 mouse = Input::GetMouseDelta();
 
-		t.RotateYaw(mouse.x * m_Sensitivity);
-		t.RotatePitch(-mouse.y * m_Sensitivity);
+		float yaw = -mouse.x * m_Sensitivity;
+		float pitch = -mouse.y * m_Sensitivity;
+		float newPitch = glm::clamp(m_Pitch + pitch, -m_MaxPitch, m_MaxPitch);
+		pitch = newPitch - m_Pitch;
+		m_Pitch = newPitch;
+
+		t.RotateYaw(yaw);
+		t.RotatePitch(pitch);
 
 		m_Mouse.deltaX = 0.0f;
 		m_Mouse.deltaY = 0.0f;

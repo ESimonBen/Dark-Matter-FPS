@@ -1,10 +1,12 @@
 #include "Scene/Scene.h"
 #include "Scripting/ScriptableEntity.h"
 #include "Debug/Assert.h"
+#include "Physics/PhysicsManager.h"
 
 namespace Core {
 	Scene::Scene() {
 		// Nothing here for now
+		PhysicsManager::Init();
 	}
 
 	Entity Scene::CreateEntity() {
@@ -43,6 +45,17 @@ namespace Core {
 
 				script.m_Instance->OnUpdate(dt);
 			}
+		}
+
+		PhysicsManager::Update(dt);
+
+		for (auto& [id, phys] : m_Physics) {
+			Transform& transform = m_Transforms[id];
+			JPH::Vec3 pos = PhysicsManager::GetPosition(phys.bodyID);
+			transform.position = { pos.GetX(), pos.GetY(), pos.GetZ() };
+
+			JPH::Quat rotate = PhysicsManager::GetRotation(phys.bodyID);
+			transform.rotation = Quat{ rotate.GetW(), rotate.GetX(), rotate.GetY(), rotate.GetZ() };
 		}
 	}
 
@@ -99,6 +112,22 @@ namespace Core {
 		CORE_ASSERT(entity.IsValid())
 		EntityID id = entity.GetID();
 		m_MeshComponents.emplace(id, std::make_unique<MeshComponent>( std::move(mesh), program ));
+	}
+
+	void Scene::AttachPhysicsBox(Entity entity, const Vec3& halfExtent, bool isStatic, Quat rotation) {
+		Transform* transform = GetTransform(entity);
+		if (!transform) {
+			return;
+		}
+
+		JPH::BodyID bodyID = PhysicsManager::CreateBox(JPH::RVec3{ transform->position.x, transform->position.y, transform->position.z }, JPH::Vec3{halfExtent.x, halfExtent.y, halfExtent.z}, isStatic);
+
+		m_Physics[entity.GetID()] = {bodyID, isStatic};
+
+		if (rotation != Quat{}) {
+			auto& bodyInterface = PhysicsManager::GetBodyInterface();
+			PhysicsManager::SetRotation(bodyID, rotation);
+		}
 	}
 
 	bool Scene::HasMesh(EntityID id) const {

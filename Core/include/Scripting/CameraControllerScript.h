@@ -30,5 +30,7 @@ namespace Core {
 		MouseMovement m_Mouse;
 		float m_Speed = 5.0f;
 		float m_Sensitivity = 0.005f;
+		float m_Pitch = 0.0f;
+		float m_MaxPitch = glm::radians(89.5f);
 	};
 }

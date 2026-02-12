@@ -23,6 +23,7 @@ namespace Core {
 		scene = std::make_unique<Scene>();
 		Entity cameraEntity = scene->CreateEntity();
 		Camera& camera = scene->CreateCamera(cameraEntity, glm::pi<float>() / 4.0f, window->GetWidth(), window->GetHeight(), 0.1f, 100.0f);
+		cameraEntity.GetTransform().position.y = -3.0f;
 		scene->AttachScript<CameraControllerScript>(cameraEntity);
 		scene->SetActiveCamera(cameraEntity);
 	}
@@ -89,6 +90,29 @@ namespace Core {
 	}
 
 	void Application::LoadTestScene() {
+		Shader vert{ "assets/shaders/vertex.glsl", ShaderType::Vertex };
+		Shader frag{ "assets/shaders/fragment.glsl", ShaderType::Fragment };
+
+		auto shaderProgram = std::make_shared<ShaderProgram>();
+		shaderProgram->Attach(vert);
+		shaderProgram->Attach(frag);
+		shaderProgram->Link();
+
+		Entity floor = scene->CreateEntity();
+		floor.GetTransform().position.y = -5.0f;
+		floor.GetTransform().scale = { 40.0f, 2.0f, 40.0f };
+		scene->AttachPhysicsBox(floor, { 20.0f, 1.0f, 20.0f }, true, {1.0f, 0.0f, 0.0f, 0.0f});
+		scene->AttachMesh(floor, CreateCubeMesh(), shaderProgram);
+
+		for (int i = 0; i < 20; i++) {
+			Entity cube1 = scene->CreateEntity();
+			cube1.GetTransform().position = { 0.0f, (float)i + 1.0f, -10.0f};
+			scene->AttachPhysicsBox(cube1, { 0.5f, 0.5f, 0.5f }, false, { 1.0f, 0.64f, 0.43f, 0.53f });
+			scene->AttachMesh(cube1, CreateCubeMesh(), shaderProgram);
+		}
+	}
+
+	std::unique_ptr<Mesh> Application::CreateCubeMesh() {
 		Vertex vertices[] = {
 			// index: 0
 			{ {-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f} }, // left-bottom-back   (red)
@@ -135,22 +159,6 @@ namespace Core {
 			6, 7, 3
 		};
 
-		Shader vert{ "assets/shaders/vertex.glsl", ShaderType::Vertex };
-		Shader frag{ "assets/shaders/fragment.glsl", ShaderType::Fragment };
-		Mesh mesh{ vertices, sizeof(vertices), indices, sizeof(indices) };
-		Mesh mesh2{ vertices, sizeof(vertices), indices, sizeof(indices) };
-
-		auto shaderProgram = std::make_shared<ShaderProgram>();
-		shaderProgram->Attach(vert);
-		shaderProgram->Attach(frag);
-		shaderProgram->Link();
-
-		Entity cube1 = scene->CreateEntity();
-		cube1.GetTransform().position = {1.0f, 0.0f, -3.0f};
-		scene->AttachMesh(cube1, std::make_unique<Mesh>(std::move(mesh)), shaderProgram);
-
-		Entity cube2 = scene->CreateEntity();
-		cube2.GetTransform().position = {-1.0f, 0.0f, -3.0f};
-		scene->AttachMesh(cube2, std::make_unique<Mesh>(std::move(mesh2)), shaderProgram);
+		return std::make_unique<Mesh>(vertices, sizeof(vertices), indices, sizeof(indices));
 	}
 }

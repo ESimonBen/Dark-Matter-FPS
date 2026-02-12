@@ -12,14 +12,15 @@ namespace Core {
 		void Rotate(const Vec3& delta);
 		void RotatePitch(float radians);
 		void RotateYaw(float radians);
-		void SetRotation(const Vec3& rotate);
+		void SetRotation(const Quat& rotate);
 
 		Vec3 Forward() const;
 		Vec3 Right() const;
 		Vec3 Up() const;
 
 		Vec3 position{ 0.0f };
-		Vec3 rotation{ 0.0f };
+		/*Vec3 rotation{ 0.0f };*/
+		Quat rotation{ 1, 0, 0, 0 };
 		Vec3 scale{ 1.0f };
 
 	private:
