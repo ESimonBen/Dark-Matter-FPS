@@ -102,17 +102,19 @@ namespace Core {
 		floor.GetTransform().position.y = -5.0f;
 		floor.GetTransform().scale = { 40.0f, 2.0f, 40.0f };
 		scene->AttachPhysicsBox(floor, { 20.0f, 1.0f, 20.0f }, true, {1.0f, 0.0f, 0.0f, 0.0f});
-		scene->AttachMesh(floor, CreateCubeMesh(), shaderProgram);
+		scene->AttachMesh(floor, std::move(CreateCubeMesh()), shaderProgram);
 
-		for (int i = 0; i < 20; i++) {
-			Entity cube1 = scene->CreateEntity();
-			cube1.GetTransform().position = { 0.0f, (float)i + 1.0f, -10.0f};
-			scene->AttachPhysicsBox(cube1, { 0.5f, 0.5f, 0.5f }, false, { 1.0f, 0.64f, 0.43f, 0.53f });
-			scene->AttachMesh(cube1, CreateCubeMesh(), shaderProgram);
+		for (int i = 0; i < 5; i++) {
+			for (int j = 0; j < 5; j++) {
+				Entity cube1 = scene->CreateEntity();
+				cube1.GetTransform().position = { (float)i, (float)j + 10.0f, -10.0f };
+				scene->AttachPhysicsBox(cube1, { 0.5f, 0.5f, 0.5f }, false, { 1.0f, 0.0f, 0.0f, 0.0f });
+				scene->AttachMesh(cube1, std::move(CreateCubeMesh()), shaderProgram);
+			}
 		}
 	}
 
-	std::unique_ptr<Mesh> Application::CreateCubeMesh() {
+	Mesh Application::CreateCubeMesh() {
 		Vertex vertices[] = {
 			// index: 0
 			{ {-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f} }, // left-bottom-back   (red)
@@ -159,6 +161,6 @@ namespace Core {
 			6, 7, 3
 		};
 
-		return std::make_unique<Mesh>(vertices, sizeof(vertices), indices, sizeof(indices));
+		return Mesh{ vertices, sizeof(vertices), indices, sizeof(indices) };
 	}
 }

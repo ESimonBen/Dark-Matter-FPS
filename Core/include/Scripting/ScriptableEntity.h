@@ -8,6 +8,7 @@ namespace Core {
 
 	class ScriptableEntity {
 		friend class Scene;
+		friend class ScriptSystem;
 
 	public:
 		virtual ~ScriptableEntity() = default;
@@ -18,8 +19,8 @@ namespace Core {
 		virtual void OnDestroy();
 
 	protected:
-		Transform* GetTransform();
-		Camera* GetCamera();
+		Transform& GetTransform();
+		Camera& GetCamera();
 		Entity GetEntity() const;
 		
 

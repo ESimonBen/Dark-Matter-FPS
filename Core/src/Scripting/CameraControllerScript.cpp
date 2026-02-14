@@ -15,7 +15,7 @@ namespace Core {
 			return;
 		}
 
-		Transform& t = GetCamera()->GetTransform();
+		Transform& t = GetCamera().GetTransform();
 		Vec2 mouse = Input::GetMouseDelta();
 
 		float yaw = -mouse.x * m_Sensitivity;

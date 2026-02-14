@@ -18,7 +18,7 @@ namespace Core {
 		virtual void OnEvent(Event& event);
 		virtual void OnShutdown();
 		void LoadTestScene();
-		std::unique_ptr<Mesh> CreateCubeMesh();
+		Mesh CreateCubeMesh();
 
 	private:
 		std::unique_ptr<Window> window;

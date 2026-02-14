@@ -1,9 +1,10 @@
 #include "Scene/Camera.h"
+#include "Scene/Scene.h"
 #include <cmath>
 
 namespace Core {
-	Camera::Camera(Transform& transform, float fov, float width, float height, float near_plane, float far_plane)
-		: m_Transform(transform), m_FOV(fov), m_AspectRatio(width / height), m_Near(near_plane), m_Far(far_plane) {
+	Camera::Camera(Entity entity, float fov, float width, float height, float near_plane, float far_plane)
+		: m_ID(entity.GetID()), m_Scene(entity.GetScene()), m_FOV(fov), m_AspectRatio(width / height), m_Near(near_plane), m_Far(far_plane) {
 		m_Projection = glm::perspective(m_FOV, m_AspectRatio, m_Near, m_Far);
 	}
 
@@ -13,9 +14,10 @@ namespace Core {
 	}
 
 	Mat4 Camera::View() const {
-		const Vec3 position = m_Transform.position;
-		Vec3 forward = m_Transform.Forward();
-		Vec3 up = m_Transform.Up();
+		Transform transform = GetTransform();
+		const Vec3 position = transform.position;
+		Vec3 forward = transform.Forward();
+		Vec3 up = transform.Up();
 
 		return glm::lookAt(position, position + forward, up);
 	}
@@ -29,9 +31,9 @@ namespace Core {
 		return m_Projection;
 	}
 	Transform& Camera::GetTransform() {
-		return m_Transform;
+		return m_Scene->GetTransform(Entity{m_ID, m_Scene});
 	}
 	const Transform& Camera::GetTransform() const {
-		return m_Transform;
+		return m_Scene->GetTransform(Entity{ m_ID, m_Scene });
 	}
 }

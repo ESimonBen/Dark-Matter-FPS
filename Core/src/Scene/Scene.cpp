@@ -2,55 +2,47 @@
 #include "Scripting/ScriptableEntity.h"
 #include "Debug/Assert.h"
 #include "Physics/PhysicsManager.h"
+#include "Scripting/ScriptSystem.h"
 
 namespace Core {
 	Scene::Scene() {
-		// Nothing here for now
 		PhysicsManager::Init();
 	}
 
 	Entity Scene::CreateEntity() {
 		EntityID id = m_NextID++;
-		m_Transforms[id] = Transform{};
+		m_Transforms.Add(id, Transform{});
 		return Entity{ id, this };
 	}
 
 	Camera& Scene::CreateCamera(Entity entity, float fov, float width, float height, float near_plane, float far_plane) {
 		EntityID id = entity.GetID();
-		Transform& transform = m_Transforms[id];
-		m_Cameras[id] = std::make_unique<Camera>(transform, fov, width, height, near_plane, far_plane);
+		m_Cameras.Add(id, Camera{ entity, fov, width, height, near_plane, far_plane });
 
-		return *m_Cameras[id];
+		return m_Cameras.Get(id);
 	}
 
 	void Scene::SetActiveCamera(Entity entity) {
 		m_ActiveCamera = entity.GetID();
 	}
 
-	Camera* Scene::GetActiveCamera() {
-		auto it = m_Cameras.find(m_ActiveCamera);
-		return it != m_Cameras.end() ? it->second.get() : nullptr;
+	Camera& Scene::GetActiveCamera() {
+		return m_Cameras.Get(m_ActiveCamera);
+	}
+
+	void Scene::InitializeScripts(EntityID id) {
+		ScriptSystem::OnCreateEntity(*this, id);
 	}
 
 	void Scene::OnUpdate(float dt) {
-		for (auto& [id, scripts] : m_Scripts) {
-			for (auto& script : scripts) {
-				if (!script.m_Initialized) {
-					script.m_Instance = script.Instantiate();
-					script.m_Instance->m_Entity = Entity{ id, this };
-					script.m_Instance->m_Scene = this;
-					script.m_Instance->OnCreate();
-					script.m_Initialized = true;
-				}
-
-				script.m_Instance->OnUpdate(dt);
-			}
-		}
-
+		ScriptSystem::OnUpdate(*this, dt);
 		PhysicsManager::Update(dt);
 
-		for (auto& [id, phys] : m_Physics) {
-			Transform& transform = m_Transforms[id];
+		for (size_t i = 0; i < m_PhysicsComponents.Size(); i++) {
+			EntityID id = m_PhysicsComponents.Entities().at(i);
+			auto& phys = m_PhysicsComponents.Components().at(i);
+
+			Transform& transform = m_Transforms.Get(id);
 			JPH::Vec3 pos = PhysicsManager::GetPosition(phys.bodyID);
 			transform.position = { pos.GetX(), pos.GetY(), pos.GetZ() };
 
@@ -60,69 +52,46 @@ namespace Core {
 	}
 
 	void Scene::OnEvent(Event& event) {
-		for (auto& [id, scripts] : m_Scripts) {
-			for (auto& script : scripts) {
-				if (script.m_Initialized) {
-					script.m_Instance->OnEvent(event);
-				}
-			}
-		}
+		ScriptSystem::OnEvent(*this, event);
 	}
 
 	void Scene::OnRender(Renderer& renderer) {
-		Camera* camera = GetActiveCamera();
+		Camera& camera = GetActiveCamera();
 
-		if (!camera) {
-			return;
-		}
+		renderer.BeginScene(camera);
 
-		renderer.BeginScene(*camera);
+		for (size_t i = 0; i < m_MeshComponents.Size(); i++) {
+			EntityID id = m_MeshComponents.Entities().at(i);
+			auto& meshComponent = m_MeshComponents.Components().at(i);
 
-		for (auto& [id, component] : m_MeshComponents) {
-			auto it = m_Transforms.find(id);
-			if (it == m_Transforms.end()) {
-				continue;
-			}
-
-			renderer.Submit(*(component->m_Mesh), *(component->m_Program), it->second.GetMatrix());
+			auto transform = m_Transforms.Get(id);
+			renderer.Submit(meshComponent.m_Mesh, *(meshComponent.m_Program), transform.GetMatrix());
 		}
 
 		renderer.EndScene();
 	}
 
-	Transform* Scene::GetTransform(Entity entity) {
-		auto it = m_Transforms.find(entity.GetID()); // Get the iterator position of the Entity
-		if (it == m_Transforms.end()) {
-			return nullptr;
-		}
-
-		return &it->second; // Return the Transform of the Entity
+	Transform& Scene::GetTransform(Entity entity) {
+		return m_Transforms.Get(entity.GetID()); // Return the Transform of the Entity
 	}
 
-	Camera* Scene::GetCamera(Entity entity) {
-		auto it = m_Cameras.find(entity.GetID());
-		if (it == m_Cameras.end()) {
-			return nullptr;
-		}
-
-		return it->second.get();
+	Camera& Scene::GetCamera(Entity entity) {
+		return m_Cameras.Get(entity.GetID());
 	}
 
-	void Scene::AttachMesh(Entity entity, std::unique_ptr<Mesh> mesh, std::shared_ptr<ShaderProgram> program) {
+	void Scene::AttachMesh(Entity entity, Mesh mesh, std::shared_ptr<ShaderProgram> program) {
 		CORE_ASSERT(entity.IsValid())
 		EntityID id = entity.GetID();
-		m_MeshComponents.emplace(id, std::make_unique<MeshComponent>( std::move(mesh), program ));
+		MeshComponent meshComponent{ std::move(mesh), program };
+		m_MeshComponents.Add(id, std::move(meshComponent));
 	}
 
 	void Scene::AttachPhysicsBox(Entity entity, const Vec3& halfExtent, bool isStatic, Quat rotation) {
-		Transform* transform = GetTransform(entity);
-		if (!transform) {
-			return;
-		}
+		Transform& transform = GetTransform(entity);
 
-		JPH::BodyID bodyID = PhysicsManager::CreateBox(JPH::RVec3{ transform->position.x, transform->position.y, transform->position.z }, JPH::Vec3{halfExtent.x, halfExtent.y, halfExtent.z}, isStatic);
+		JPH::BodyID bodyID = PhysicsManager::CreateBox(JPH::RVec3{ transform.position.x, transform.position.y, transform.position.z }, JPH::Vec3{halfExtent.x, halfExtent.y, halfExtent.z}, isStatic);
 
-		m_Physics[entity.GetID()] = {bodyID, isStatic};
+		m_PhysicsComponents.Add(entity.GetID(), {bodyID, isStatic});
 
 		if (rotation != Quat{}) {
 			auto& bodyInterface = PhysicsManager::GetBodyInterface();
@@ -131,13 +100,12 @@ namespace Core {
 	}
 
 	bool Scene::HasMesh(EntityID id) const {
-		return m_MeshComponents.find(id) != m_MeshComponents.end();
+		return m_MeshComponents.Has(id);
 	}
 
 	void Scene::OnWindowResize(WindowResizeEvent& resize) {
-		if (Camera* cam = GetActiveCamera()) {
-			cam->SetAspectRatio(resize.GetWidth(), resize.GetHeight());
-		}
+		Camera& cam = GetActiveCamera();
+		cam.SetAspectRatio(resize.GetWidth(), resize.GetHeight());
 	}
 
 	void Scene::SetCursorLocked(bool mode){
@@ -160,26 +128,19 @@ namespace Core {
 	void Scene::DestroyEntity(Entity entity){
 		CORE_ASSERT(entity.IsValid())
 		EntityID id = entity.GetID();
-
-		if (auto it = m_Scripts.find(id); it != m_Scripts.end()) {
-			for (auto& script : it->second) {
-				if (script.m_Initialized) {
-					script.m_Instance->OnDestroy();
-				}
-			}
-			m_Scripts.erase(it);
-		}
+		ScriptSystem::OnDestroyEntity(*this, id);
 
 		if (m_ActiveCamera == id) {
 			m_ActiveCamera = 0;
 		}
 
-		m_Transforms.erase(id);
-		m_MeshComponents.erase(id);
-		m_Cameras.erase(id);
+		m_Transforms.Remove(id);
+		m_MeshComponents.Remove(id);
+		m_Cameras.Remove(id);
+		m_PhysicsComponents.Remove(id);
 	}
 
 	bool Scene::IsEntityAlive(EntityID id) const {
-		return m_Transforms.find(id) != m_Transforms.end();
+		return m_Transforms.Has(id);
 	}
 }

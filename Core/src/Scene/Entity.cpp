@@ -29,7 +29,7 @@ namespace Core{
 
 	Transform& Entity::GetTransform() {
 		CORE_ASSERT(IsValid())
-		return *m_Scene->GetTransform(*this);
+		return m_Scene->GetTransform(*this);
 	}
 
 	bool Entity::HasMesh() const {

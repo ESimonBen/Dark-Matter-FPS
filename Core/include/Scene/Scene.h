@@ -1,7 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include <memory>
-#include "Entity.h"
+#include <Scene/ComponentStorage.h>
 #include "Transform.h"
 #include "MeshComponent.h"
 #include "Rendering/Renderer.h"
@@ -15,12 +15,14 @@ namespace Core {
 
 	class Scene {
 	public:
+		friend class ScriptSystem;
+
 		Scene();
 
 		Entity CreateEntity();
 		Camera& CreateCamera(Entity entity, float fov, float width, float height, float near_plane, float far_plane);
 		void SetActiveCamera(Entity entity);
-		Camera* GetActiveCamera();
+		Camera& GetActiveCamera();
 
 		template <typename T>
 		void AttachScript(Entity entity) {
@@ -33,15 +35,19 @@ namespace Core {
 			sc.Instantiate = []() {
 				return std::make_unique<T>();
 			};
+
+			InitializeScripts(id);
 		}
+
+		void InitializeScripts(EntityID id);
 
 		void OnUpdate(float dt);
 		void OnEvent(Event& event);
 		void OnRender(Renderer& renderer);
 
-		Transform* GetTransform(Entity entity);
-		Camera* GetCamera(Entity entity);
-		void AttachMesh(Entity entity, std::unique_ptr<Mesh> mesh, std::shared_ptr<ShaderProgram> program);
+		Transform& GetTransform(Entity entity);
+		Camera& GetCamera(Entity entity);
+		void AttachMesh(Entity entity, Mesh mesh, std::shared_ptr<ShaderProgram> program);
 		void AttachPhysicsBox(Entity entity, const Vec3& halfExtent, bool isStatic, Quat rotation);
 		bool HasMesh(EntityID id) const;
 		void OnWindowResize(WindowResizeEvent& resize);
@@ -54,11 +60,12 @@ namespace Core {
 		bool IsEntityAlive(EntityID id) const;
 
 	private:
-		std::unordered_map<EntityID, Transform> m_Transforms;
-		std::unordered_map<EntityID, std::unique_ptr<MeshComponent>> m_MeshComponents;
-		std::unordered_map<EntityID, std::unique_ptr<Camera>> m_Cameras;
+		ComponentStorage<Transform> m_Transforms;
+		ComponentStorage<MeshComponent> m_MeshComponents;
+		ComponentStorage<Camera> m_Cameras;
+		ComponentStorage<PhysicsComponent> m_PhysicsComponents;
 		std::unordered_map<EntityID, std::vector<ScriptComponent>> m_Scripts;
-		std::unordered_map<EntityID, PhysicsComponent> m_Physics;
+
 		EntityID m_NextID = 1;
 		EntityID m_ActiveCamera = 0;
 		bool m_CursorLocked = true;

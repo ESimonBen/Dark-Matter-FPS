@@ -24,19 +24,11 @@ namespace Core {
 		m_Scene = scene;
 	}
 
-	Transform* ScriptableEntity::GetTransform() {
-		if (!m_Scene || !m_Entity.IsValid()) {
-			return nullptr;
-		}
-
+	Transform& ScriptableEntity::GetTransform() {
 		return m_Scene->GetTransform(m_Entity);
 	}
 
-	Camera* ScriptableEntity::GetCamera() {
-		if (!m_Scene || !m_Entity.IsValid()) {
-			return nullptr;
-		}
-
+	Camera& ScriptableEntity::GetCamera() {
 		return m_Scene->GetCamera(m_Entity);
 	}
 
