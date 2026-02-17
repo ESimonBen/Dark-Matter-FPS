@@ -15,6 +15,7 @@ namespace Core {
 
 		virtual void OnCreate();
 		virtual void OnUpdate(float dt);
+		virtual void OnFixedUpdate(float dt);
 		virtual void OnEvent(Event& event);
 		virtual void OnDestroy();
 

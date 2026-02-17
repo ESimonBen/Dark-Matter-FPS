@@ -38,7 +38,11 @@ namespace Core {
 
 	void Scene::OnUpdate(float dt) {
 		ScriptSystem::OnUpdate(*this, dt);
+	}
+
+	void Scene::OnFixedUpdate(float dt) {
 		PhysicsSystem::OnUpdate(*this, dt);
+		ScriptSystem::OnFixedUpdate(*this, dt);
 	}
 
 	void Scene::OnEvent(Event& event) {

@@ -1,7 +1,7 @@
-#include "Application.h"
+#include "GameApplication.h"
 
 int main() {
-	Core::Application app;
+	DarkMatter::GameApplication app;
 	app.Run();
 	return 0;
 }

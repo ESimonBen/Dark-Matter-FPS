@@ -26,7 +26,21 @@ namespace Core {
 
 		for (auto& [id, scripts] : sceneScripts) {
 			for (auto& script : scripts) {
-				script.m_Instance->OnUpdate(dt);
+				if (script.m_Initialized) {
+					script.m_Instance->OnUpdate(dt);
+				}
+			}
+		}
+	}
+
+	void ScriptSystem::OnFixedUpdate(Scene& scene, float dt) {
+		auto& sceneScripts = scene.Scripts();
+
+		for (auto& [id, scripts] : sceneScripts) {
+			for (auto& script : scripts) {
+				if (script.m_Initialized) {
+					script.m_Instance->OnFixedUpdate(dt);
+				}
 			}
 		}
 	}

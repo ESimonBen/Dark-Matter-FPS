@@ -5,7 +5,7 @@
 #include "Transform.h"
 #include "MeshComponent.h"
 #include "Rendering/Renderer.h"
-#include "Scripting/CameraControllerScript.h"
+#include "Events/ApplicationEvent.h"
 #include "Scripting/ScriptComponent.h"
 #include "Physics/PhysicsComponent.h"
 
@@ -40,6 +40,7 @@ namespace Core {
 		void InitializeScripts(EntityID id);
 
 		void OnUpdate(float dt);
+		void OnFixedUpdate(float dt);
 		void OnEvent(Event& event);
 		void OnRender(Renderer& renderer, float alpha);
 

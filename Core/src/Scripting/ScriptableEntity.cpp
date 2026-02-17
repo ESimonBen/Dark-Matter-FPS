@@ -11,6 +11,10 @@ namespace Core {
 		// Nothing to do for now
 	}
 
+	void ScriptableEntity::OnFixedUpdate(float dt){
+		// Nothing for now
+	}
+
 	void ScriptableEntity::OnEvent(Event& event) {
 		// Nothing to do for now
 	}

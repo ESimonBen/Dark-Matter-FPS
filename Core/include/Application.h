@@ -15,10 +15,12 @@ namespace Core {
 	protected:
 		virtual void OnInit();
 		virtual void OnUpdate(float dt);
+		virtual void OnFixedUpdate(float dt);
 		virtual void OnEvent(Event& event);
 		virtual void OnShutdown();
-		void LoadTestScene();
-		Mesh CreateCubeMesh();
+		Scene& GetScene();
+		Window& GetWindow();
+		Renderer& GetRenderer();
 
 	private:
 		std::unique_ptr<Window> window;

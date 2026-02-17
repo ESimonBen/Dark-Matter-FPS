@@ -6,7 +6,7 @@
 #include "Window.h"
 #include "Scripting/ScriptableEntity.h"
 
-namespace Core {
+namespace DarkMatter {
 
 	struct MouseMovement {
 		float deltaX = 0.0f;
@@ -16,16 +16,16 @@ namespace Core {
 		bool first = true;
 	};
 
-	class CameraControllerScript : public ScriptableEntity {
+	class CameraControllerScript : public Core::ScriptableEntity {
 	public:
 		void OnCreate() override;
 		void OnUpdate(float dt) override;
-		void OnEvent(Event& event) override;
+		void OnEvent(Core::Event& event) override;
 
 	private:
-		bool OnKeyPressEvent(KeyPressEvent& pressEvent);
-		bool OnKeyReleaseEvent(KeyReleaseEvent& releaseEvent);
-		bool OnMouseMoveEvent(MouseMoveEvent& mouseEvent);
+		bool OnKeyPressEvent(Core::KeyPressEvent& pressEvent);
+		bool OnKeyReleaseEvent(Core::KeyReleaseEvent& releaseEvent);
+		bool OnMouseMoveEvent(Core::MouseMoveEvent& mouseEvent);
 
 		MouseMovement m_Mouse;
 		float m_Speed = 5.0f;
