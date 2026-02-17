@@ -53,12 +53,12 @@ namespace Core {
 		s_PhysicsSystem.Update(dt, collisionSteps, s_TempAllocator, s_JobSystem);
 	}
 
-	JPH::BodyID PhysicsManager::CreateBox(const JPH::RVec3Arg& position, const JPH::Vec3& halfExtent, bool isStatic, bool activate) {
+	JPH::BodyID PhysicsManager::CreateBox(const JPH::RVec3Arg& position, const JPH::QuatArg& rotation, const JPH::Vec3& halfExtent, bool isStatic, bool activate) {
 		auto& bodyInterface = GetBodyInterface();
 
 		JPH::RefConst<JPH::Shape> shape = new JPH::BoxShape(halfExtent);
 
-		JPH::BodyCreationSettings settings{ shape.GetPtr(), position, JPH::Quat::sIdentity(), isStatic ? JPH::EMotionType::Static : JPH::EMotionType::Dynamic, isStatic ? ObjectLayers::NON_MOVING : ObjectLayers::MOVING};
+		JPH::BodyCreationSettings settings{ shape.GetPtr(), position, rotation, isStatic ? JPH::EMotionType::Static : JPH::EMotionType::Dynamic, isStatic ? ObjectLayers::NON_MOVING : ObjectLayers::MOVING};
 
 		JPH::BodyID bodyID = bodyInterface.CreateAndAddBody(settings, activate ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
 

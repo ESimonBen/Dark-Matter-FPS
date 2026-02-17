@@ -14,7 +14,7 @@ namespace Core {
 		static void Init();
 		static void Shutdown();
 		static void Update(float dt);
-		static JPH::BodyID CreateBox(const JPH::RVec3Arg& position, const JPH::Vec3& halfExtent, bool isStatic, bool activate = true);
+		static JPH::BodyID CreateBox(const JPH::RVec3Arg& position, const JPH::QuatArg& rotation, const JPH::Vec3& halfExtent, bool isStatic, bool activate = true);
 		static void DestroyBody(JPH::BodyID id);
 		static JPH::BodyInterface& GetBodyInterface();
 		static JPH::RVec3 GetPosition(JPH::BodyID id);

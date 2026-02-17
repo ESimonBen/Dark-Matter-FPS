@@ -15,7 +15,7 @@ namespace Core {
 
 	Mat4 Camera::View() const {
 		Transform transform = GetTransform();
-		const Vec3 position = transform.position;
+		const Vec3 position = transform.Position();
 		Vec3 forward = transform.Forward();
 		Vec3 up = transform.Up();
 

@@ -3,8 +3,10 @@
 
 namespace Core {
 	void ScriptSystem::OnCreateEntity(Scene& scene, EntityID id) {
-		auto it = scene.m_Scripts.find(id);
-		if (it == scene.m_Scripts.end()) {
+		auto& sceneScripts = scene.Scripts();
+		auto it = sceneScripts.find(id);
+
+		if (it == sceneScripts.end()) {
 			return;
 		}
 
@@ -20,7 +22,9 @@ namespace Core {
 	}
 
 	void ScriptSystem::OnUpdate(Scene& scene, float dt) {
-		for (auto& [id, scripts] : scene.m_Scripts) {
+		auto& sceneScripts = scene.Scripts();
+
+		for (auto& [id, scripts] : sceneScripts) {
 			for (auto& script : scripts) {
 				script.m_Instance->OnUpdate(dt);
 			}
@@ -28,7 +32,9 @@ namespace Core {
 	}
 
 	void ScriptSystem::OnEvent(Scene& scene, Event& event) {
-		for (auto& [id, scripts] : scene.m_Scripts) {
+		auto& sceneScripts = scene.Scripts();
+
+		for (auto& [id, scripts] : sceneScripts) {
 			for (auto& script : scripts) {
 				if (script.m_Initialized) {
 					script.m_Instance->OnEvent(event);
@@ -38,9 +44,10 @@ namespace Core {
 	}
 
 	void ScriptSystem::OnDestroyEntity(Scene& scene, EntityID id) {
-		auto it = scene.m_Scripts.find(id);
+		auto& sceneScripts = scene.Scripts();
+		auto it = sceneScripts.find(id);
 
-		if (it == scene.m_Scripts.end()) {
+		if (it == sceneScripts.end()) {
 			return;
 		}
 
@@ -50,6 +57,6 @@ namespace Core {
 			}
 		}
 
-		scene.m_Scripts.erase(id);
+		sceneScripts.erase(id);
 	}
 }

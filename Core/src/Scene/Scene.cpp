@@ -3,6 +3,8 @@
 #include "Debug/Assert.h"
 #include "Physics/PhysicsManager.h"
 #include "Scripting/ScriptSystem.h"
+#include "Physics/PhysicsSystem.h"
+#include "Rendering/RenderSystem.h"
 
 namespace Core {
 	Scene::Scene() {
@@ -36,39 +38,15 @@ namespace Core {
 
 	void Scene::OnUpdate(float dt) {
 		ScriptSystem::OnUpdate(*this, dt);
-		PhysicsManager::Update(dt);
-
-		for (size_t i = 0; i < m_PhysicsComponents.Size(); i++) {
-			EntityID id = m_PhysicsComponents.Entities().at(i);
-			auto& phys = m_PhysicsComponents.Components().at(i);
-
-			Transform& transform = m_Transforms.Get(id);
-			JPH::Vec3 pos = PhysicsManager::GetPosition(phys.bodyID);
-			transform.position = { pos.GetX(), pos.GetY(), pos.GetZ() };
-
-			JPH::Quat rotate = PhysicsManager::GetRotation(phys.bodyID);
-			transform.rotation = Quat{ rotate.GetW(), rotate.GetX(), rotate.GetY(), rotate.GetZ() };
-		}
+		PhysicsSystem::OnUpdate(*this, dt);
 	}
 
 	void Scene::OnEvent(Event& event) {
 		ScriptSystem::OnEvent(*this, event);
 	}
 
-	void Scene::OnRender(Renderer& renderer) {
-		Camera& camera = GetActiveCamera();
-
-		renderer.BeginScene(camera);
-
-		for (size_t i = 0; i < m_MeshComponents.Size(); i++) {
-			EntityID id = m_MeshComponents.Entities().at(i);
-			auto& meshComponent = m_MeshComponents.Components().at(i);
-
-			auto transform = m_Transforms.Get(id);
-			renderer.Submit(meshComponent.m_Mesh, *(meshComponent.m_Program), transform.GetMatrix());
-		}
-
-		renderer.EndScene();
+	void Scene::OnRender(Renderer& renderer, float alpha) {
+		RenderSystem::OnRender(*this, renderer, alpha);
 	}
 
 	Transform& Scene::GetTransform(Entity entity) {
@@ -89,14 +67,17 @@ namespace Core {
 	void Scene::AttachPhysicsBox(Entity entity, const Vec3& halfExtent, bool isStatic, Quat rotation) {
 		Transform& transform = GetTransform(entity);
 
-		JPH::BodyID bodyID = PhysicsManager::CreateBox(JPH::RVec3{ transform.position.x, transform.position.y, transform.position.z }, JPH::Vec3{halfExtent.x, halfExtent.y, halfExtent.z}, isStatic);
+		if (rotation != Quat{}) {
+			transform.SetRotation(rotation);
+		}
+		
+		transform.SetPreviousPosition(transform.Position());
+		transform.SetPreviousRotation(transform.Rotation());
+
+		JPH::BodyID bodyID = PhysicsManager::CreateBox(JPH::RVec3{ transform.Position().x, transform.Position().y, transform.Position().z }, JPH::QuatArg{rotation.x, rotation.y, rotation.z, rotation.w}, 
+													   JPH::Vec3{halfExtent.x, halfExtent.y, halfExtent.z}, isStatic);
 
 		m_PhysicsComponents.Add(entity.GetID(), {bodyID, isStatic});
-
-		if (rotation != Quat{}) {
-			auto& bodyInterface = PhysicsManager::GetBodyInterface();
-			PhysicsManager::SetRotation(bodyID, rotation);
-		}
 	}
 
 	bool Scene::HasMesh(EntityID id) const {
@@ -129,6 +110,7 @@ namespace Core {
 		CORE_ASSERT(entity.IsValid())
 		EntityID id = entity.GetID();
 		ScriptSystem::OnDestroyEntity(*this, id);
+		PhysicsSystem::OnDestroy(*this);
 
 		if (m_ActiveCamera == id) {
 			m_ActiveCamera = 0;
@@ -136,11 +118,26 @@ namespace Core {
 
 		m_Transforms.Remove(id);
 		m_MeshComponents.Remove(id);
-		m_Cameras.Remove(id);
 		m_PhysicsComponents.Remove(id);
 	}
 
 	bool Scene::IsEntityAlive(EntityID id) const {
 		return m_Transforms.Has(id);
+	}
+
+	ComponentStorage<Transform>& Scene::Transforms() {
+		return m_Transforms;
+	}
+
+	ComponentStorage<PhysicsComponent>& Scene::PhysicsComponents() {
+		return m_PhysicsComponents;
+	}
+
+	ComponentStorage<MeshComponent>& Scene::MeshComponents() {
+		return m_MeshComponents;
+	}
+
+	std::unordered_map<EntityID, std::vector<ScriptComponent>>& Scene::Scripts() {
+		return m_Scripts;
 	}
 }

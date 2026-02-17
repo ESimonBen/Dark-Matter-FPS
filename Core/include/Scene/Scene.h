@@ -15,8 +15,6 @@ namespace Core {
 
 	class Scene {
 	public:
-		friend class ScriptSystem;
-
 		Scene();
 
 		Entity CreateEntity();
@@ -43,7 +41,7 @@ namespace Core {
 
 		void OnUpdate(float dt);
 		void OnEvent(Event& event);
-		void OnRender(Renderer& renderer);
+		void OnRender(Renderer& renderer, float alpha);
 
 		Transform& GetTransform(Entity entity);
 		Camera& GetCamera(Entity entity);
@@ -58,6 +56,11 @@ namespace Core {
 
 		void DestroyEntity(Entity entity);
 		bool IsEntityAlive(EntityID id) const;
+
+		ComponentStorage<Transform>& Transforms();
+		ComponentStorage<PhysicsComponent>& PhysicsComponents();
+		ComponentStorage<MeshComponent>& MeshComponents();
+		std::unordered_map<EntityID, std::vector<ScriptComponent>>& Scripts();
 
 	private:
 		ComponentStorage<Transform> m_Transforms;

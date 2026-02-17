@@ -23,7 +23,7 @@ namespace Core {
 		scene = std::make_unique<Scene>();
 		Entity cameraEntity = scene->CreateEntity();
 		Camera& camera = scene->CreateCamera(cameraEntity, glm::pi<float>() / 4.0f, window->GetWidth(), window->GetHeight(), 0.1f, 100.0f);
-		cameraEntity.GetTransform().position.y = -3.0f;
+		cameraEntity.GetTransform().SetPosition({ 0.0f, -3.0f, 0.0f });
 		scene->AttachScript<CameraControllerScript>(cameraEntity);
 		scene->SetActiveCamera(cameraEntity);
 	}
@@ -63,18 +63,32 @@ namespace Core {
 			OnEvent(e);
 		});
 
+		float accumulator = 0.0f;
+		const float fixedDelta = 1.0f / 60.0f;
+
 		while (!window->ShouldClose()) {
 			float time = glfwGetTime();
 			m_DeltaTime = time - m_LastFrameTime;
 			m_LastFrameTime = time;
 
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			// Prevents spiral of death
+			m_DeltaTime = std::min(m_DeltaTime, 0.25f);
+			accumulator += m_DeltaTime;
 
 			window->PollEvents();
-			OnUpdate(m_DeltaTime);
-			scene->OnRender(renderer);
-			Input::EndFrame();
 
+			while (accumulator >= fixedDelta) {
+				OnUpdate(fixedDelta);
+				accumulator -= fixedDelta;
+			}
+
+			float alpha = accumulator / fixedDelta;
+
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			scene->OnRender(renderer, alpha);
+
+			Input::EndFrame();
 			window->SwapBuffers();
 		}
 
@@ -99,15 +113,15 @@ namespace Core {
 		shaderProgram->Link();
 
 		Entity floor = scene->CreateEntity();
-		floor.GetTransform().position.y = -5.0f;
-		floor.GetTransform().scale = { 40.0f, 2.0f, 40.0f };
+		floor.GetTransform().SetPosition({0.0f, -5.0f, 0.0f});
+		floor.GetTransform().SetScale({ 40.0f, 2.0f, 40.0f });
 		scene->AttachPhysicsBox(floor, { 20.0f, 1.0f, 20.0f }, true, {1.0f, 0.0f, 0.0f, 0.0f});
 		scene->AttachMesh(floor, std::move(CreateCubeMesh()), shaderProgram);
 
 		for (int i = 0; i < 5; i++) {
 			for (int j = 0; j < 5; j++) {
 				Entity cube1 = scene->CreateEntity();
-				cube1.GetTransform().position = { (float)i, (float)j + 10.0f, -10.0f };
+				cube1.GetTransform().SetPosition({ (float)i, (float)j + 10.0f, -10.0f });
 				scene->AttachPhysicsBox(cube1, { 0.5f, 0.5f, 0.5f }, false, { 1.0f, 0.0f, 0.0f, 0.0f });
 				scene->AttachMesh(cube1, std::move(CreateCubeMesh()), shaderProgram);
 			}
