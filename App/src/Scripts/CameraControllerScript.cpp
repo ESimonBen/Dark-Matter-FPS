@@ -3,6 +3,7 @@
 #include "Scripts/CameraControllerScript.h"
 #include "Scene/Scene.h"
 #include "Input/Input.h"
+#include "Physics/PhysicsManager.h"
 
 namespace DarkMatter {
 	void CameraControllerScript::OnCreate() {
@@ -15,7 +16,14 @@ namespace DarkMatter {
 			return;
 		}
 
-		Core::Transform& t = GetCamera().GetTransform();
+		Core::Transform& cameraTransform = GetCamera().GetTransform();
+		auto* parent = cameraTransform.GetParent();
+
+		if (!parent) {
+			return;
+		}
+
+		Core::Entity playerEntity = Core::Entity{ parent->GetOwner(), m_Scene };
 		Core::Vec2 mouse = Core::Input::GetMouseDelta();
 
 		float yaw = -mouse.x * m_Sensitivity;
@@ -24,44 +32,16 @@ namespace DarkMatter {
 		pitch = newPitch - m_Pitch;
 		m_Pitch = newPitch;
 
-		t.RotateYaw(yaw);
-		t.RotatePitch(pitch);
+		auto& phys = m_Scene->PhysicsComponents().Get(playerEntity.GetID());
 
-		m_Mouse.deltaX = 0.0f;
-		m_Mouse.deltaY = 0.0f;
+		JPH::Quat currentRotation = Core::PhysicsManager::GetRotation(phys.bodyID);
+		Core::Quat yawRotation = glm::angleAxis(yaw, Core::Vec3{ 0.0f, 1.0f, 0.0f });
+		Core::Quat newRotation = yawRotation * Core::Quat{ currentRotation.GetW(), currentRotation.GetX(), currentRotation.GetY(), currentRotation.GetZ() };
 
-		Core::Vec3 moveDir{ 0.0f };
+		Core::PhysicsManager::SetRotation(phys.bodyID, newRotation);
 
-		if (Core::Input::IsKeyDown(Core::Key::W)) {
-			moveDir.z += 1.0f;
-		}
-
-		if (Core::Input::IsKeyDown(Core::Key::A)) {
-			moveDir.x -= 1.0f;
-		}
-
-		if (Core::Input::IsKeyDown(Core::Key::S)) {
-			moveDir.z -= 1.0f;
-		}
-		
-		if (Core::Input::IsKeyDown(Core::Key::D)) {
-			moveDir.x += 1.0f;
-		}
-
-		if (Core::Input::IsKeyDown(Core::Key::Space)) {
-			moveDir.y += 1.0f;
-		}
-
-		if (Core::Input::IsKeyDown(Core::Key::LeftShift)) {
-			moveDir.y -= 1.0f;
-		}
-
-		if (glm::length(moveDir) > 0.0f) {
-			moveDir = glm::normalize(moveDir);
-		}
-		
-		t.TranslateLocal(Core::Vec3{ moveDir.x, 0.0f, moveDir.z } * m_Speed * dt);
-		t.TranslateWorld(Core::Vec3{ 0.0f, moveDir.y, 0.0f } * m_Speed * dt);
+		/*playerTransform.RotateYaw(yaw);*/
+		cameraTransform.RotatePitch(pitch);
 	}
 
 	void CameraControllerScript::OnEvent(Core::Event& event) {

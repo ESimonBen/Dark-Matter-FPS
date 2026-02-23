@@ -1,5 +1,6 @@
 #include "GameApplication.h"
 #include "Scripts/CameraControllerScript.h"
+#include "Scripts/PlayerControllerScript.h"
 #include "Rendering/ShaderProgram.h"
 
 namespace DarkMatter {
@@ -9,21 +10,13 @@ namespace DarkMatter {
 		auto& scene = GetScene();
 		auto& window = GetWindow();
 
-		Core::Entity cameraEntity = scene.CreateEntity();
-
-		auto& camera = scene.CreateCamera(cameraEntity, glm::pi<float>() / 4.0f, window.GetWidth(), window.GetHeight(), 0.1f, 100.0f);
-
-		cameraEntity.GetTransform().SetPosition({ 0.0f, -3.0f, 0.0f });
-
-		scene.AttachScript<CameraControllerScript>(cameraEntity);
-		scene.SetActiveCamera(cameraEntity);
-
 		LoadTestScene();
 
 	}
 	
 	void GameApplication::LoadTestScene() {
 		auto& scene = GetScene();
+		auto& window = GetWindow();
 
 		Core::Shader vert{ "assets/shaders/vertex.glsl", Core::ShaderType::Vertex };
 		Core::Shader frag{ "assets/shaders/fragment.glsl", Core::ShaderType::Fragment };
@@ -34,7 +27,7 @@ namespace DarkMatter {
 		shaderProgram->Link();
 
 		Core::Entity floor = scene.CreateEntity();
-		floor.GetTransform().SetPosition({ 0.0f, -5.0f, 0.0f });
+		/*floor.GetTransform().SetPosition({ 0.0f, -5.0f, 0.0f });*/
 		floor.GetTransform().SetScale({ 40.0f, 2.0f, 40.0f });
 		scene.AttachPhysicsBox(floor, { 20.0f, 1.0f, 20.0f }, true, { 1.0f, 0.0f, 0.0f, 0.0f });
 		scene.AttachMesh(floor, std::move(CreateCubeMesh()), shaderProgram);
@@ -47,6 +40,18 @@ namespace DarkMatter {
 				scene.AttachMesh(cube1, std::move(CreateCubeMesh()), shaderProgram);
 			}
 		}
+
+		Core::Entity playerEntity = scene.CreateEntity();
+		playerEntity.GetTransform().SetPosition(Core::Vec3{ 0.0f, 10.0f, 5.0f });
+		scene.AttachPhysicsBox(playerEntity, { 0.5f, 0.5f, 0.5f }, false, { 1.0f, 0.0f, 0.0f, 0.0f });
+		scene.AttachScript<PlayerControllerScript>(playerEntity);
+
+		Core::Entity cameraEntity = scene.CreateEntity();
+		auto& camera = scene.CreateCamera(cameraEntity, glm::pi<float>() / 4.0f, window.GetWidth(), window.GetHeight(), 0.1f, 100.0f);
+		scene.AttachScript<CameraControllerScript>(cameraEntity);
+		scene.SetActiveCamera(cameraEntity);
+
+		scene.SetParent(playerEntity, cameraEntity);
 	}
 
 	Core::Mesh GameApplication::CreateCubeMesh() {

@@ -22,6 +22,10 @@ namespace Core {
 		static JPH::PhysicsSystem& GetSystem();
 		static void SetGravity(const JPH::Vec3& gravity);
 		static void SetRotation(JPH::BodyID id, const Quat& rotation);
+		static void SetLinearVelocity(JPH::BodyID, const Vec3& velocity);
+		static void AddForce(JPH::BodyID id, const Vec3& force);
+		static void AddImpulse(JPH::BodyID id, const Vec3& impulse);
+		static JPH::Vec3 GetLinearVelocity(JPH::BodyID id);
 
 	private:
 		static JPH::PhysicsSystem s_PhysicsSystem;

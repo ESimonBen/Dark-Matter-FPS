@@ -1,4 +1,5 @@
 #include "Scene/Transform.h"
+#include "Scene/Entity.h"
 
 namespace Core {
 	void Transform::TranslateLocal(const Vec3& delta) {
@@ -76,19 +77,6 @@ namespace Core {
 		return m_Rotation;
 	}
 
-	void Transform::SetRenderSnapshot() {
-		m_RenderPosition = m_Position;
-		m_RenderRotation = m_Rotation;
-	}
-
-	Vec3 Transform::RenderPosition() {
-		return m_RenderPosition;
-	}
-
-	Quat Transform::RenderRotation() {
-		return m_RenderRotation;
-	}
-
 	Vec3 Transform::Scale() {
 		return m_Scale;
 	}
@@ -116,6 +104,14 @@ namespace Core {
 		m_Dirty = true;
 	}
 
+	EntityID Transform::GetOwner() const {
+		return m_Owner;
+	}
+
+	void Transform::SetOwner(EntityID id) {
+		m_Owner = id;
+	}
+
 	Mat4 Transform::GetMatrix() const {
 		Mat4 m{ 1.0f }; // Identity Matrix
 
@@ -123,22 +119,44 @@ namespace Core {
 		m *= glm::mat4_cast(m_Rotation);
 		m = glm::scale(m, m_Scale);
 
+		if (m_Parent) {
+			return m_Parent->GetMatrix() * m;
+		}
+
 		m_WorldMatrix = m;
 		m_Dirty = false;
 		return m_WorldMatrix;
 	}
 
-	Mat4 Transform::GetInterpolatedMatrix(float alpha, bool renderInterp) const {
-		const Vec3& startPos = renderInterp ? m_RenderPosition : m_PreviousPosition;
-		const Quat& startRot = renderInterp ? m_RenderRotation : m_PreviousRotation;
+	Mat4 Transform::GetInterpolatedMatrix(float alpha) const {
 
-		Vec3 interpPosition = glm::mix(startPos, m_Position, alpha);
-		Quat interpRotation = glm::slerp(startRot, m_Rotation, alpha);
+		Vec3 interpPosition = glm::mix(m_PreviousPosition, m_Position, alpha);
+		Quat interpRotation = glm::slerp(m_PreviousRotation, m_Rotation, alpha);
 
 		Mat4 translate = glm::translate(Mat4{ 1.0f }, interpPosition);
 		Mat4 rotation = glm::mat4_cast(interpRotation);
 		Mat4 scale = glm::scale(Mat4{ 1.0f }, m_Scale);
 
-		return translate * rotation * scale;
+		Mat4 finalMat = translate * rotation * scale;
+
+		if (m_Parent) {
+			return m_Parent->GetInterpolatedMatrix(alpha) * finalMat;
+		}
+
+		return finalMat;
+	}
+
+	void Transform::AddChild(Entity child) {
+		m_Children.push_back(child.GetID());
+		child.GetTransform().m_Parent = this;
+	}
+
+	void Transform::RemoveChild(Entity child) {
+		m_Children.erase(std::remove(m_Children.begin(), m_Children.end(), child.GetID()), m_Children.end());
+		child.GetTransform().m_Parent = nullptr;
+	}
+
+	Transform* Transform::GetParent() {
+		return m_Parent;
 	}
 }

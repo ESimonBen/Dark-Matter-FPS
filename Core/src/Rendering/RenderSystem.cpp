@@ -6,7 +6,7 @@ namespace Core {
 		Camera& camera = scene.GetActiveCamera();
 		auto& meshComponents = scene.MeshComponents();
 
-		renderer.BeginScene(camera);
+		renderer.BeginScene(camera, alpha);
 
 		for (size_t i = 0; i < meshComponents.Size(); i++) {
 			EntityID id = meshComponents.Entities().at(i);
@@ -14,7 +14,7 @@ namespace Core {
 
 			Transform& transform = scene.Transforms().Get(id);
 
-			renderer.Submit(meshComponent.m_Mesh, *meshComponent.m_Program, transform.GetInterpolatedMatrix(alpha, true));
+			renderer.Submit(meshComponent.m_Mesh, *meshComponent.m_Program, transform.GetInterpolatedMatrix(alpha));
 		}
 
 		renderer.EndScene();

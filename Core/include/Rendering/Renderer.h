@@ -6,7 +6,7 @@
 namespace Core {
 	class Renderer {
 	public:
-		static void BeginScene(Camera& camera);
+		static void BeginScene(Camera& camera, float alpha);
 		static void Submit(const Mesh& mesh, const ShaderProgram& program, const Mat4& transform);
 		static void EndScene();
 	};

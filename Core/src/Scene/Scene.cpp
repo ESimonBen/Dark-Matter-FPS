@@ -13,8 +13,13 @@ namespace Core {
 
 	Entity Scene::CreateEntity() {
 		EntityID id = m_NextID++;
-		m_Transforms.Add(id, Transform{});
+		auto& transform = m_Transforms.Add(id, Transform{});
+		transform.SetOwner(id);
 		return Entity{ id, this };
+	}
+
+	void Scene::SetParent(Entity parent, Entity child) {
+		parent.GetTransform().AddChild(child);
 	}
 
 	Camera& Scene::CreateCamera(Entity entity, float fov, float width, float height, float near_plane, float far_plane) {

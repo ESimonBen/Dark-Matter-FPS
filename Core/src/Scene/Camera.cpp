@@ -13,13 +13,10 @@ namespace Core {
 		m_Projection = glm::perspective(m_FOV, m_AspectRatio, m_Near, m_Far);
 	}
 
-	Mat4 Camera::View() const {
-		Transform transform = GetTransform();
-		const Vec3 position = transform.Position();
-		Vec3 forward = transform.Forward();
-		Vec3 up = transform.Up();
-
-		return glm::lookAt(position, position + forward, up);
+	Mat4 Camera::View(float alpha) const {
+		const Transform& transform = GetTransform();
+		Mat4 world = transform.GetInterpolatedMatrix(alpha);
+		return glm::inverse(world);
 	}
 
 	Mat4 Camera::Projection() const {

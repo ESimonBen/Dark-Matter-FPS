@@ -18,6 +18,7 @@ namespace Core {
 		Scene();
 
 		Entity CreateEntity();
+		void SetParent(Entity parent, Entity child);
 		Camera& CreateCamera(Entity entity, float fov, float width, float height, float near_plane, float far_plane);
 		void SetActiveCamera(Entity entity);
 		Camera& GetActiveCamera();

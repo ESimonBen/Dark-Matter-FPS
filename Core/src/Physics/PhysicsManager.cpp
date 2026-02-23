@@ -59,6 +59,8 @@ namespace Core {
 		JPH::RefConst<JPH::Shape> shape = new JPH::BoxShape(halfExtent);
 
 		JPH::BodyCreationSettings settings{ shape.GetPtr(), position, rotation, isStatic ? JPH::EMotionType::Static : JPH::EMotionType::Dynamic, isStatic ? ObjectLayers::NON_MOVING : ObjectLayers::MOVING};
+		settings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
+		settings.mMassPropertiesOverride.mMass = 70.0f;
 
 		JPH::BodyID bodyID = bodyInterface.CreateAndAddBody(settings, activate ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
 
@@ -95,5 +97,29 @@ namespace Core {
 		auto& bodyInterface = GetBodyInterface();
 		Quat newRotate = glm::normalize(rotation);
 		bodyInterface.SetRotation(id, JPH::Quat{ newRotate.x, newRotate.y, newRotate.z, newRotate.w }, JPH::EActivation::Activate);
+	}
+
+	void PhysicsManager::SetLinearVelocity(JPH::BodyID id, const Vec3& velocity) {
+		auto& bodyInterface = GetBodyInterface();
+		/*Vec3 newVelocity = glm::normalize(velocity);*/
+		bodyInterface.SetLinearVelocity(id, JPH::Vec3Arg{ velocity.x, velocity.y, velocity.z });
+	}
+
+	void PhysicsManager::AddForce(JPH::BodyID id, const Vec3& force) {
+		auto& bodyInterface = GetBodyInterface();
+		/*Vec3 newForce = glm::normalize(force);*/
+		bodyInterface.AddForce(id, JPH::Vec3Arg{ force.x, force.y, force.z });
+	}
+
+	void PhysicsManager::AddImpulse(JPH::BodyID id, const Vec3& impulse) {
+		auto& bodyInterface = GetBodyInterface();
+		/*Vec3 newImpulse = glm::normalize(impulse);*/
+		bodyInterface.AddImpulse(id, JPH::Vec3Arg{ impulse.x, impulse.y, impulse.z });
+		bodyInterface.ActivateBody(id);
+	}
+
+	JPH::Vec3 PhysicsManager::GetLinearVelocity(JPH::BodyID id) {
+		auto& bodyInterface = GetBodyInterface();
+		return bodyInterface.GetLinearVelocity(id);
 	}
 }

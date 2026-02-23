@@ -15,7 +15,7 @@ namespace Core {
 
 		void SetAspectRatio(float width, float height);
 
-		Mat4 View() const;
+		Mat4 View(float alpha) const;
 		Mat4 Projection() const;
 		Transform& GetTransform();
 		const Transform& GetTransform() const;
