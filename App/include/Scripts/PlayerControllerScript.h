@@ -13,5 +13,7 @@ namespace DarkMatter {
 		Core::PhysicsComponent* m_PhysicsComponent = nullptr;
 		float m_Speed = 5.0f;
 		float m_JumpSpeed = 5.0f;
+		bool m_IsGrounded = false;
+		bool m_JumpedLastFrame = false;
 	};
 }

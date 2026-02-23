@@ -57,12 +57,16 @@ namespace DarkMatter {
 
 		Core::PhysicsManager::SetLinearVelocity(bodyID, velocity);
 
-		if (Core::Input::IsKeyDown(Core::Key::Space)) {
-			Core::PhysicsManager::AddImpulse(bodyID, Core::Vec3{ 0.0f, 200.0f, 0.0f });
-			auto vel = Core::PhysicsManager::GetLinearVelocity(bodyID);
-			std::cout << vel.GetX() << ", "
-				<< vel.GetY() << ", "
-				<< vel.GetZ() << std::endl;
+		JPH::Vec3 vel = Core::PhysicsManager::GetLinearVelocity(bodyID);
+		m_IsGrounded = std::abs(vel.GetY()) < 0.1f;
+		bool jumped = Core::Input::IsKeyDown(Core::Key::Space);
+
+		if (jumped && !m_JumpedLastFrame && m_IsGrounded) {
+			JPH::Vec3 vel = Core::PhysicsManager::GetLinearVelocity(bodyID);
+			vel.SetY(8.0f);
+			Core::PhysicsManager::SetLinearVelocity(bodyID, Core::Vec3{ vel.GetX(), vel.GetY(), vel.GetZ()});
 		}
+
+		m_JumpedLastFrame = jumped;
 	}
 }
