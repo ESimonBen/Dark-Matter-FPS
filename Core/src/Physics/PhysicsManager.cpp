@@ -3,6 +3,8 @@
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Core/Factory.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
 
 namespace Core {
 	JPH::PhysicsSystem PhysicsManager::s_PhysicsSystem;
@@ -67,6 +69,27 @@ namespace Core {
 		return bodyID;
 	}
 
+	JPH::BodyID PhysicsManager::CreateCharacterBox(const JPH::RVec3Arg& position, const JPH::QuatArg& rotation, const JPH::Vec3& halfExtent, bool activate) {
+		auto& bodyInterface = GetBodyInterface();
+
+		JPH::RefConst<JPH::Shape> shape = new JPH::BoxShape(halfExtent);
+
+		JPH::BodyCreationSettings settings{ shape.GetPtr(), position, rotation, JPH::EMotionType::Dynamic, ObjectLayers::MOVING };
+		settings.mMassPropertiesOverride.mMass = 70.0f;
+
+		settings.mAllowedDOFs =
+			JPH::EAllowedDOFs::TranslationX |
+			JPH::EAllowedDOFs::TranslationY |
+			JPH::EAllowedDOFs::TranslationZ;
+
+		settings.mFriction = 0.0f;
+		settings.mMotionQuality = JPH::EMotionQuality::LinearCast;
+
+		JPH::BodyID bodyID = bodyInterface.CreateAndAddBody(settings, activate ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
+
+		return bodyID;
+	}
+
 	void PhysicsManager::DestroyBody(JPH::BodyID id) {
 		auto& bodyInterface = s_PhysicsSystem.GetBodyInterface();
 		bodyInterface.RemoveBody(id);
@@ -101,19 +124,16 @@ namespace Core {
 
 	void PhysicsManager::SetLinearVelocity(JPH::BodyID id, const Vec3& velocity) {
 		auto& bodyInterface = GetBodyInterface();
-		/*Vec3 newVelocity = glm::normalize(velocity);*/
 		bodyInterface.SetLinearVelocity(id, JPH::Vec3Arg{ velocity.x, velocity.y, velocity.z });
 	}
 
 	void PhysicsManager::AddForce(JPH::BodyID id, const Vec3& force) {
 		auto& bodyInterface = GetBodyInterface();
-		/*Vec3 newForce = glm::normalize(force);*/
 		bodyInterface.AddForce(id, JPH::Vec3Arg{ force.x, force.y, force.z });
 	}
 
 	void PhysicsManager::AddImpulse(JPH::BodyID id, const Vec3& impulse) {
 		auto& bodyInterface = GetBodyInterface();
-		/*Vec3 newImpulse = glm::normalize(impulse);*/
 		bodyInterface.AddImpulse(id, JPH::Vec3Arg{ impulse.x, impulse.y, impulse.z });
 		bodyInterface.ActivateBody(id);
 	}
@@ -121,5 +141,15 @@ namespace Core {
 	JPH::Vec3 PhysicsManager::GetLinearVelocity(JPH::BodyID id) {
 		auto& bodyInterface = GetBodyInterface();
 		return bodyInterface.GetLinearVelocity(id);
+	}
+
+	bool PhysicsManager::Raycast(const JPH::Vec3& origin, const JPH::Vec3& direction, float length, JPH::BodyID ignoredBody) {
+		JPH::RRayCast ray{ origin, direction * length};
+		JPH::RayCastResult hit;
+		JPH::IgnoreSingleBodyFilter filter{ ignoredBody };
+
+		bool didHit = s_PhysicsSystem.GetNarrowPhaseQuery().CastRay(ray, hit, {}, {}, filter);
+
+		return didHit;
 	}
 }

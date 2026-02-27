@@ -13,7 +13,6 @@ namespace Core {
 	}
 
 	void Transform::Rotate(const Vec3& deltaRadians) {
-		/*m_Rotation += delta;*/
 		Quat qPitch = glm::angleAxis(deltaRadians.x, Right());
 		Quat qYaw = glm::angleAxis(deltaRadians.y, Vec3{0.0f, 1.0f, 0.0f});
 		Quat qRoll = glm::angleAxis(deltaRadians.z, Forward());
@@ -24,16 +23,12 @@ namespace Core {
 	}
 
 	void Transform::RotatePitch(float radians) {
-		/*m_Rotation.x += radians;
-		const float limit = glm::half_pi<float>() - 0.001f;
-		m_Rotation.x = glm::clamp(m_Rotation.x, -limit, limit);*/
 		Quat quat = glm::angleAxis(radians, Right());
 		m_Rotation = glm::normalize(quat * m_Rotation);
 		m_Dirty = true;
 	}
 
 	void Transform::RotateYaw(float radians) {
-		/*m_Rotation.y += radians;*/
 		Quat quat = glm::angleAxis(radians, Vec3{ 0.0f, 1.0f, 0.0f });
 		m_Rotation = glm::normalize(quat * m_Rotation);
 		m_Dirty = true;
@@ -41,23 +36,15 @@ namespace Core {
 
 	
 
-	Vec3 Transform::Forward() const {/*
-		return glm::normalize(Vec3{
-			sin(m_Rotation.y) * cos(m_Rotation.x),
-			sin(m_Rotation.x),
-			-cos(m_Rotation.y) * cos(m_Rotation.x)
-		});*/
-
+	Vec3 Transform::Forward() const {
 		return glm::normalize(m_Rotation * Vec3{ 0.0f, 0.0f, -1.0f });
 	}
 
 	Vec3 Transform::Right() const {
-		/*return glm::normalize(glm::cross(Forward(), Vec3{ 0, 1, 0 }));*/
 		return glm::normalize(m_Rotation * Vec3{ 1.0f, 0.0f, 0.0f });
 	}
 
 	Vec3 Transform::Up() const {
-		/*return glm::normalize(glm::cross(Right(), Forward()));*/
 		return glm::normalize(m_Rotation * Vec3{ 0.0f, 1.0f, 0.0f });
 	}
 

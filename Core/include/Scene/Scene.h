@@ -49,6 +49,7 @@ namespace Core {
 		Camera& GetCamera(Entity entity);
 		void AttachMesh(Entity entity, Mesh mesh, std::shared_ptr<ShaderProgram> program);
 		void AttachPhysicsBox(Entity entity, const Vec3& halfExtent, bool isStatic, Quat rotation);
+		void AttachCharacterBox(Entity entity, const Vec3& halfExtent, Quat rotation);
 		bool HasMesh(EntityID id) const;
 		void OnWindowResize(WindowResizeEvent& resize);
 

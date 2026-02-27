@@ -6,12 +6,7 @@
 namespace DarkMatter {
 	void GameApplication::OnInit() {
 		Core::Application::OnInit();
-
-		auto& scene = GetScene();
-		auto& window = GetWindow();
-
 		LoadTestScene();
-
 	}
 	
 	void GameApplication::LoadTestScene() {
@@ -26,11 +21,11 @@ namespace DarkMatter {
 		shaderProgram->Attach(frag);
 		shaderProgram->Link();
 
-		Core::Entity floor = scene.CreateEntity();
-		/*floor.GetTransform().SetPosition({ 0.0f, -5.0f, 0.0f });*/
-		floor.GetTransform().SetScale({ 40.0f, 2.0f, 40.0f });
-		scene.AttachPhysicsBox(floor, { 20.0f, 1.0f, 20.0f }, true, { 1.0f, 0.0f, 0.0f, 0.0f });
-		scene.AttachMesh(floor, std::move(CreateCubeMesh()), shaderProgram);
+		Core::Entity floor1 = scene.CreateEntity();
+		floor1.GetTransform().SetScale({ 40.0f, 2.0f, 40.0f });
+		scene.AttachPhysicsBox(floor1, { 20.0f, 1.0f, 20.0f }, true, { 1.0f, 0.0f, 0.0f, 0.0f });
+		scene.AttachMesh(floor1, std::move(CreateCubeMesh()), shaderProgram);
+
 
 		for (int i = 0; i < 5; i++) {
 			for (int j = 0; j < 5; j++) {
@@ -43,11 +38,11 @@ namespace DarkMatter {
 
 		Core::Entity playerEntity = scene.CreateEntity();
 		playerEntity.GetTransform().SetPosition(Core::Vec3{ 0.0f, 10.0f, 5.0f });
-		scene.AttachPhysicsBox(playerEntity, { 0.5f, 0.5f, 0.5f }, false, { 1.0f, 0.0f, 0.0f, 0.0f });
+		scene.AttachCharacterBox(playerEntity, { 0.5f, 1.0f, 0.5f }, { 1.0f, 0.0f, 0.0f, 0.0f });
 		scene.AttachScript<PlayerControllerScript>(playerEntity);
 
 		Core::Entity cameraEntity = scene.CreateEntity();
-		auto& camera = scene.CreateCamera(cameraEntity, glm::pi<float>() / 4.0f, window.GetWidth(), window.GetHeight(), 0.1f, 100.0f);
+		auto& camera = scene.CreateCamera(cameraEntity, glm::pi<float>() / 4.0f, window.GetWidth(), window.GetHeight(), 0.1f, 1000.0f);
 		scene.AttachScript<CameraControllerScript>(cameraEntity);
 		scene.SetActiveCamera(cameraEntity);
 

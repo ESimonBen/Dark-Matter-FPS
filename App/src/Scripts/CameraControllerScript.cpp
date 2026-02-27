@@ -40,7 +40,6 @@ namespace DarkMatter {
 
 		Core::PhysicsManager::SetRotation(phys.bodyID, newRotation);
 
-		/*playerTransform.RotateYaw(yaw);*/
 		cameraTransform.RotatePitch(pitch);
 	}
 

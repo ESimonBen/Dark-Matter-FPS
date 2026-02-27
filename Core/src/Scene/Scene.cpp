@@ -89,6 +89,22 @@ namespace Core {
 		m_PhysicsComponents.Add(entity.GetID(), {bodyID, isStatic});
 	}
 
+	void Scene::AttachCharacterBox(Entity entity, const Vec3& halfExtent, Quat rotation) {
+		Transform& transform = GetTransform(entity);
+
+		if (rotation != Quat{}) {
+			transform.SetRotation(rotation);
+		}
+
+		transform.SetPreviousPosition(transform.Position());
+		transform.SetPreviousRotation(transform.Rotation());
+
+		JPH::BodyID bodyID = PhysicsManager::CreateCharacterBox(JPH::RVec3{ transform.Position().x, transform.Position().y, transform.Position().z }, JPH::QuatArg{ rotation.x, rotation.y, rotation.z, rotation.w },
+			JPH::Vec3{ halfExtent.x, halfExtent.y, halfExtent.z });
+
+		m_PhysicsComponents.Add(entity.GetID(), { bodyID, false });
+	}
+
 	bool Scene::HasMesh(EntityID id) const {
 		return m_MeshComponents.Has(id);
 	}

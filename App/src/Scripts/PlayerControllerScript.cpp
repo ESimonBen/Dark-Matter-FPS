@@ -50,21 +50,47 @@ namespace DarkMatter {
 		right = glm::normalize(right);
 
 		auto bodyID = m_PhysicsComponent->bodyID;
+
+
+		Core::Vec3 position = m_Transform->Position();
+		float playerHalfHeight = 1.0f; // Temporary
+
+		Core::Vec3 rayOrigin = position;
+		rayOrigin.y -= playerHalfHeight;
+
+		float rayLength = .15f;
+
+		m_IsGrounded = Core::PhysicsManager::Raycast(JPH::Vec3{ rayOrigin.x, rayOrigin.y, rayOrigin.z }, JPH::Vec3{ 0.0f, -1.0f, 0.0f }, rayLength, bodyID);
 		
-		Core::Vec3 velocity = ((forward * moveDir.z) + (right * moveDir.x)) * m_Speed;
+		Core::Vec3 desiredMove = ((forward * moveDir.z) + (right * moveDir.x));
+
+		if (glm::length(desiredMove) > 0.0f) {
+			desiredMove = glm::normalize(desiredMove);
+		}
+
+		Core::Vec3 desiredVelocity = desiredMove * m_Speed;
+
 		JPH::Vec3 currentVelocity = Core::PhysicsManager::GetLinearVelocity(bodyID);
-		velocity.y = currentVelocity.GetY();
+		Core::Vec3 currentHorizontal{ currentVelocity.GetX(), 0.0f, currentVelocity.GetZ() };
 
-		Core::PhysicsManager::SetLinearVelocity(bodyID, velocity);
+		float accel = m_IsGrounded ? m_GroundAcceleration : m_AirAcceleration;
+		Core::Vec3 delta = desiredVelocity - currentHorizontal;
+		Core::Vec3 acceleration = delta * accel;
+		Core::Vec3 newHorizontal = currentHorizontal + acceleration * dt;
 
-		JPH::Vec3 vel = Core::PhysicsManager::GetLinearVelocity(bodyID);
-		m_IsGrounded = std::abs(vel.GetY()) < 0.1f;
+		if (glm::length(newHorizontal) > m_Speed) {
+			newHorizontal = glm::normalize(newHorizontal) * m_Speed;
+		}
+
+		Core::PhysicsManager::SetLinearVelocity(bodyID, Core::Vec3{newHorizontal.x, currentVelocity.GetY(), newHorizontal.z});
+
 		bool jumped = Core::Input::IsKeyDown(Core::Key::Space);
 
 		if (jumped && !m_JumpedLastFrame && m_IsGrounded) {
-			JPH::Vec3 vel = Core::PhysicsManager::GetLinearVelocity(bodyID);
-			vel.SetY(8.0f);
-			Core::PhysicsManager::SetLinearVelocity(bodyID, Core::Vec3{ vel.GetX(), vel.GetY(), vel.GetZ()});
+			JPH::Vec3 currentVel = Core::PhysicsManager::GetLinearVelocity(bodyID);
+			Core::Vec3 targetVel = Core::Vec3{ currentVel.GetX(), 8.0f, currentVel.GetZ() };
+
+			Core::PhysicsManager::SetLinearVelocity(bodyID, targetVel);
 		}
 
 		m_JumpedLastFrame = jumped;

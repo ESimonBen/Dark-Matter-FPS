@@ -15,5 +15,7 @@ namespace DarkMatter {
 		float m_JumpSpeed = 5.0f;
 		bool m_IsGrounded = false;
 		bool m_JumpedLastFrame = false;
+		float m_GroundAcceleration = 4.0f;
+		float m_AirAcceleration = 1.5f;
 	};
 }
