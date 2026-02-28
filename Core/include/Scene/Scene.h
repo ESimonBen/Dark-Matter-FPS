@@ -50,6 +50,7 @@ namespace Core {
 		void AttachMesh(Entity entity, Mesh mesh, std::shared_ptr<ShaderProgram> program);
 		void AttachPhysicsBox(Entity entity, const Vec3& halfExtent, bool isStatic, Quat rotation);
 		void AttachCharacterBox(Entity entity, const Vec3& halfExtent, Quat rotation);
+		void AttachRampBox(Entity entity, Quat rotation, bool isStatic);
 		bool HasMesh(EntityID id) const;
 		void OnWindowResize(WindowResizeEvent& resize);
 

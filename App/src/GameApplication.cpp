@@ -21,11 +21,15 @@ namespace DarkMatter {
 		shaderProgram->Attach(frag);
 		shaderProgram->Link();
 
-		Core::Entity floor1 = scene.CreateEntity();
-		floor1.GetTransform().SetScale({ 40.0f, 2.0f, 40.0f });
-		scene.AttachPhysicsBox(floor1, { 20.0f, 1.0f, 20.0f }, true, { 1.0f, 0.0f, 0.0f, 0.0f });
-		scene.AttachMesh(floor1, std::move(CreateCubeMesh()), shaderProgram);
+		/*Core::Entity floor = scene.CreateEntity();
+		floor.GetTransform().SetScale({ 40.0f, 2.0f, 40.0f });
+		scene.AttachPhysicsBox(floor, { 20.0f, 1.0f, 20.0f }, true, { 1.0f, 0.0f, 0.0f, 0.0f });
+		scene.AttachMesh(floor, std::move(CreateCubeMesh()), shaderProgram);*/
 
+		Core::Entity ramp = scene.CreateEntity();
+		ramp.GetTransform().SetScale({ 40.0f, 2.0f, 40.0f });
+		scene.AttachRampBox(ramp, { 1.0f, 0.0f, 0.0f, 0.0f }, true);
+		scene.AttachMesh(ramp, CreateRampMesh(), shaderProgram);
 
 		for (int i = 0; i < 5; i++) {
 			for (int j = 0; j < 5; j++) {
@@ -99,4 +103,56 @@ namespace DarkMatter {
 		return Core::Mesh{ vertices, sizeof(vertices), indices, sizeof(indices) };
 	}
 
+	Core::Mesh GameApplication::CreateRampMesh() {
+		// Ramp dimensions: width = 1 (X), depth = 1 (Z), height back = 1 (Y), height front = 0.
+		// Back edge at z = -0.5 is high (y = +0.5), front edge at z = +0.5 is low (y = -0.5).
+		Core::Vertex vertices[] = {
+			// Back edge (high)
+			// index: 0
+			{ {-0.5f,  10.5f, -0.5f}, {1.0f, 0.0f, 0.0f} }, // back-left-top
+			// index: 1
+			{ { 0.5f,  10.5f, -0.5f}, {0.0f, 1.0f, 0.0f} }, // back-right-top
+
+			// Front edge (low)
+			// index: 2
+			{ {-0.5f, -0.5f,  0.5f}, {0.0f, 0.0f, 1.0f} }, // front-left-bottom
+			// index: 3
+			{ { 0.5f, -0.5f,  0.5f}, {1.0f, 1.0f, 0.0f} }, // front-right-bottom
+
+			// Bottom back (to form vertical back face)
+			// index: 4
+			{ {-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 1.0f} }, // back-left-bottom
+			// index: 5
+			{ { 0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 1.0f} }, // back-right-bottom
+		};
+
+		// Triangles:
+		// - top slope (quad split into 2 tris): 0,1,3,2
+		// - left side: 0,2,4
+		// - right side: 1,5,3
+		// - back face (quad 0,1,5,4)
+		// - bottom face (quad 4,5,3,2)
+
+		unsigned int indices[] = {
+			// top slope
+			0, 1, 3,
+			3, 2, 0,
+
+			// left side
+			0, 2, 4,
+
+			// right side
+			1, 5, 3,
+
+			// back face
+			0, 5, 1,
+			0, 4, 5,
+
+			// bottom face
+			4, 3, 5,
+			4, 2, 3
+		};
+
+		return Core::Mesh{ vertices, sizeof(vertices), indices, sizeof(indices) };
+	}
 }

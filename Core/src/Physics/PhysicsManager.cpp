@@ -1,9 +1,11 @@
 #include "Physics/PhysicsManager.h"
+#include "Debug/Assert.h"
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 
 namespace Core {
@@ -63,6 +65,30 @@ namespace Core {
 		JPH::BodyCreationSettings settings{ shape.GetPtr(), position, rotation, isStatic ? JPH::EMotionType::Static : JPH::EMotionType::Dynamic, isStatic ? ObjectLayers::NON_MOVING : ObjectLayers::MOVING};
 		settings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
 		settings.mMassPropertiesOverride.mMass = 70.0f;
+
+		JPH::BodyID bodyID = bodyInterface.CreateAndAddBody(settings, activate ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
+
+		return bodyID;
+	}
+
+	JPH::BodyID PhysicsManager::CreateRamp(const JPH::RVec3Arg& position, const JPH::QuatArg& rotation, const JPH::Vec3& scale, bool isStatic, bool activate) {
+		auto& bodyInterface = GetBodyInterface();
+
+		// Vertices centered at origin
+		JPH::Array<JPH::Vec3> points;
+		points.push_back({ -0.5f * scale.GetX(),  10.5f * scale.GetY(), -0.5f * scale.GetZ() });
+		points.push_back({  0.5f * scale.GetX(),  10.5f * scale.GetY(), -0.5f * scale.GetZ() });
+		points.push_back({ -0.5f * scale.GetX(), -0.5f * scale.GetY(),  0.5f * scale.GetZ() });
+		points.push_back({  0.5f * scale.GetX(), -0.5f * scale.GetY(),  0.5f * scale.GetZ() });
+		points.push_back({ -0.5f * scale.GetX(), -0.5f * scale.GetY(), -0.5f * scale.GetZ() });
+		points.push_back({ 0.5f * scale.GetX(), -0.5f * scale.GetY(), -0.5f * scale.GetZ() });
+
+		JPH::ConvexHullShapeSettings hullSettings(points);
+		auto result = hullSettings.Create();
+		CORE_ASSERT(!result.HasError());
+		JPH::RefConst<JPH::Shape> shape = result.Get();
+
+		JPH::BodyCreationSettings settings{ shape, position, rotation, isStatic ? JPH::EMotionType::Static : JPH::EMotionType::Dynamic, isStatic ? ObjectLayers::NON_MOVING : ObjectLayers::MOVING };
 
 		JPH::BodyID bodyID = bodyInterface.CreateAndAddBody(settings, activate ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
 
@@ -143,13 +169,30 @@ namespace Core {
 		return bodyInterface.GetLinearVelocity(id);
 	}
 
-	bool PhysicsManager::Raycast(const JPH::Vec3& origin, const JPH::Vec3& direction, float length, JPH::BodyID ignoredBody) {
+	bool PhysicsManager::Raycast(const JPH::Vec3& origin, const JPH::Vec3& direction, float length, JPH::BodyID ignoredBody, JPH::Vec3& outNormal) {
 		JPH::RRayCast ray{ origin, direction * length};
 		JPH::RayCastResult hit;
 		JPH::IgnoreSingleBodyFilter filter{ ignoredBody };
 
 		bool didHit = s_PhysicsSystem.GetNarrowPhaseQuery().CastRay(ray, hit, {}, {}, filter);
 
-		return didHit;
+		if (!didHit) {
+			outNormal = JPH::Vec3::sAxisY();
+			return false;
+		}
+
+		JPH::BodyLockRead lock{ s_PhysicsSystem.GetBodyLockInterface(), hit.mBodyID };
+		if (!lock.Succeeded()) {
+			outNormal = JPH::Vec3::sAxisY();
+			return false;
+		}
+
+		const JPH::Body& body = lock.GetBody();
+		JPH::Vec3 hitPosition = ray.GetPointOnRay(hit.mFraction);
+		JPH::Vec3 localPosition = body.GetWorldTransform().Inversed() * hitPosition;
+		JPH::Vec3 localNormal = body.GetShape()->GetSurfaceNormal(hit.mSubShapeID2, localPosition);
+		outNormal = body.GetWorldTransform().Multiply3x3(localNormal);
+
+		return true;
 	}
 }

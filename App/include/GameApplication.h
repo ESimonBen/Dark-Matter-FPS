@@ -7,5 +7,6 @@ namespace DarkMatter {
 		void OnInit() override;
 		void LoadTestScene();
 		Core::Mesh CreateCubeMesh();
+		Core::Mesh CreateRampMesh();
 	};
 }

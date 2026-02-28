@@ -105,6 +105,23 @@ namespace Core {
 		m_PhysicsComponents.Add(entity.GetID(), { bodyID, false });
 	}
 
+	void Scene::AttachRampBox(Entity entity, Quat rotation, bool isStatic) {
+		Transform& transform = GetTransform(entity);
+
+		if (rotation != Quat{}) {
+			transform.SetRotation(rotation);
+		}
+
+		transform.SetPreviousPosition(transform.Position());
+		transform.SetPreviousRotation(transform.Rotation());
+
+		JPH::Vec3 scale = { transform.Scale().x, transform.Scale().y, transform.Scale().z };
+
+		JPH::BodyID bodyID = PhysicsManager::CreateRamp(JPH::RVec3{ transform.Position().x, transform.Position().y, transform.Position().z }, JPH::QuatArg{ rotation.x, rotation.y, rotation.z, rotation.w }, scale, isStatic);
+
+		m_PhysicsComponents.Add(entity.GetID(), { bodyID, true });
+	}
+
 	bool Scene::HasMesh(EntityID id) const {
 		return m_MeshComponents.Has(id);
 	}

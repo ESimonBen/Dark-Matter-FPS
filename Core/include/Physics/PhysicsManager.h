@@ -15,6 +15,7 @@ namespace Core {
 		static void Shutdown();
 		static void Update(float dt);
 		static JPH::BodyID CreateBox(const JPH::RVec3Arg& position, const JPH::QuatArg& rotation, const JPH::Vec3& halfExtent, bool isStatic, bool activate = true);
+		static JPH::BodyID CreateRamp(const JPH::RVec3Arg& position, const JPH::QuatArg& rotation, const JPH::Vec3& scale, bool isStatic, bool activate = true);
 		static JPH::BodyID CreateCharacterBox(const JPH::RVec3Arg& position, const JPH::QuatArg& rotation, const JPH::Vec3& halfExtent, bool activate = true);
 		static void DestroyBody(JPH::BodyID id);
 		static JPH::BodyInterface& GetBodyInterface();
@@ -27,7 +28,7 @@ namespace Core {
 		static void AddForce(JPH::BodyID id, const Vec3& force);
 		static void AddImpulse(JPH::BodyID id, const Vec3& impulse);
 		static JPH::Vec3 GetLinearVelocity(JPH::BodyID id);
-		static bool Raycast(const JPH::Vec3& origin, const JPH::Vec3& direction, float length, JPH::BodyID ignoredBody);
+		static bool Raycast(const JPH::Vec3& origin, const JPH::Vec3& direction, float length, JPH::BodyID ignoredBody, JPH::Vec3& outNormal);
 
 	private:
 		static JPH::PhysicsSystem s_PhysicsSystem;

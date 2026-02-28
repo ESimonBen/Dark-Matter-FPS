@@ -9,6 +9,7 @@ namespace DarkMatter {
 		void OnFixedUpdate(float dt) override;
 
 	private:
+		Core::Vec3 m_GroundNormal{ 0.0f, 1.0f, 0.0f };
 		Core::Transform* m_Transform = nullptr;
 		Core::PhysicsComponent* m_PhysicsComponent = nullptr;
 		float m_Speed = 5.0f;

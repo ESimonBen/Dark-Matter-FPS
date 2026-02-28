@@ -59,10 +59,17 @@ namespace DarkMatter {
 		rayOrigin.y -= playerHalfHeight;
 
 		float rayLength = .15f;
-
-		m_IsGrounded = Core::PhysicsManager::Raycast(JPH::Vec3{ rayOrigin.x, rayOrigin.y, rayOrigin.z }, JPH::Vec3{ 0.0f, -1.0f, 0.0f }, rayLength, bodyID);
+		
+		JPH::Vec3 hitNormal;
+		m_IsGrounded = Core::PhysicsManager::Raycast(JPH::Vec3{ rayOrigin.x, rayOrigin.y, rayOrigin.z }, JPH::Vec3{ 0.0f, -1.0f, 0.0f }, rayLength, bodyID, hitNormal);
+		if (m_IsGrounded) {
+			m_GroundNormal = Core::Vec3{ hitNormal.GetX(), hitNormal.GetY(), hitNormal.GetZ() };
+		}
 		
 		Core::Vec3 desiredMove = ((forward * moveDir.z) + (right * moveDir.x));
+		if (m_IsGrounded) {
+			desiredMove = desiredMove - glm::dot(desiredMove, m_GroundNormal) * m_GroundNormal;
+		}
 
 		if (glm::length(desiredMove) > 0.0f) {
 			desiredMove = glm::normalize(desiredMove);
