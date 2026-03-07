@@ -21,15 +21,15 @@ namespace DarkMatter {
 		shaderProgram->Attach(frag);
 		shaderProgram->Link();
 
-		/*Core::Entity floor = scene.CreateEntity();
+		Core::Entity floor = scene.CreateEntity();
 		floor.GetTransform().SetScale({ 40.0f, 2.0f, 40.0f });
 		scene.AttachPhysicsBox(floor, { 20.0f, 1.0f, 20.0f }, true, { 1.0f, 0.0f, 0.0f, 0.0f });
-		scene.AttachMesh(floor, std::move(CreateCubeMesh()), shaderProgram);*/
+		scene.AttachMesh(floor, std::move(CreateCubeMesh()), shaderProgram);
 
-		Core::Entity ramp = scene.CreateEntity();
+		/*Core::Entity ramp = scene.CreateEntity();
 		ramp.GetTransform().SetScale({ 40.0f, 2.0f, 40.0f });
 		scene.AttachRampBox(ramp, { 1.0f, 0.0f, 0.0f, 0.0f }, true);
-		scene.AttachMesh(ramp, CreateRampMesh(), shaderProgram);
+		scene.AttachMesh(ramp, CreateRampMesh(), shaderProgram);*/
 
 		for (int i = 0; i < 5; i++) {
 			for (int j = 0; j < 5; j++) {

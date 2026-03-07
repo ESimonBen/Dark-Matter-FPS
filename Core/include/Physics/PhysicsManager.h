@@ -29,6 +29,7 @@ namespace Core {
 		static void AddImpulse(JPH::BodyID id, const Vec3& impulse);
 		static JPH::Vec3 GetLinearVelocity(JPH::BodyID id);
 		static bool Raycast(const JPH::Vec3& origin, const JPH::Vec3& direction, float length, JPH::BodyID ignoredBody, JPH::Vec3& outNormal);
+		static bool CapsuleCast(const JPH::RVec3& start, const JPH::Quat& rotation, float halfHeight, float radius, const JPH::Vec3& direction, float distance, JPH::BodyID ignoredBody, JPH::Vec3& outNormal);
 
 	private:
 		static JPH::PhysicsSystem s_PhysicsSystem;

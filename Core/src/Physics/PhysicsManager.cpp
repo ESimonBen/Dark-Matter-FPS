@@ -7,6 +7,9 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 
 namespace Core {
 	JPH::PhysicsSystem PhysicsManager::s_PhysicsSystem;
@@ -192,6 +195,39 @@ namespace Core {
 		JPH::Vec3 localPosition = body.GetWorldTransform().Inversed() * hitPosition;
 		JPH::Vec3 localNormal = body.GetShape()->GetSurfaceNormal(hit.mSubShapeID2, localPosition);
 		outNormal = body.GetWorldTransform().Multiply3x3(localNormal);
+
+		return true;
+	}
+
+	bool PhysicsManager::CapsuleCast(const JPH::RVec3& start, const JPH::Quat& rotation, float halfHeight, float radius, const JPH::Vec3& direction, float distance, JPH::BodyID ignoredBody, JPH::Vec3& outNormal) {
+		JPH::CapsuleShapeSettings capsuleSettings{ halfHeight, radius };
+		auto shapeResult = capsuleSettings.Create();
+		if (shapeResult.HasError()) {
+			return false;
+		}
+
+		JPH::RefConst<JPH::Shape> capsuleShape = shapeResult.Get();
+
+		JPH::RMat44 centerOfMass = JPH::RMat44::sRotationTranslation(rotation, start);
+
+		JPH::RShapeCast shapeCast{ capsuleShape.GetPtr(), JPH::Vec3::sReplicate(1.0f), centerOfMass, direction * distance };
+
+		JPH::ShapeCastSettings settings;
+
+		JPH::ClosestHitCollisionCollector<JPH::CastShapeCollector> collector;
+
+		JPH::IgnoreSingleBodyFilter bodyFilter{ ignoredBody };
+
+		s_PhysicsSystem.GetNarrowPhaseQuery().CastShape(shapeCast, settings, JPH::RVec3::sZero(), collector, {}, {}, bodyFilter);
+
+		if (!collector.HadHit()) {
+			outNormal = JPH::Vec3::sAxisY();
+			return false;
+		}
+
+		const JPH::ShapeCastResult& hit = collector.mHit;
+
+		outNormal = -hit.mPenetrationAxis.Normalized();
 
 		return true;
 	}
