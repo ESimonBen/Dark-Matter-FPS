@@ -57,11 +57,16 @@ namespace DarkMatter {
 
 		Core::Vec3 rayOrigin = position;
 		rayOrigin.y -= playerHalfHeight;
-
-		float rayLength = .15f;
 		
+		float capsuleHalfHeight = .5f;
+		float capsuleRadius = .5f;
+		float capsuleLength = .15f;
+
+		Core::Vec3 castStart = Core::Vec3{ position.x, position.y + .05f, position.z };
+
 		JPH::Vec3 hitNormal;
-		m_IsGrounded = Core::PhysicsManager::Raycast(JPH::Vec3{ rayOrigin.x, rayOrigin.y, rayOrigin.z }, JPH::Vec3{ 0.0f, -1.0f, 0.0f }, rayLength, bodyID, hitNormal);
+		
+		m_IsGrounded = Core::PhysicsManager::CapsuleCast(JPH::RVec3{ castStart.x, castStart.y, castStart.z }, JPH::Quat::sIdentity(), capsuleHalfHeight, capsuleRadius, JPH::Vec3{ 0.0f, -1.0f, 0.0f }, capsuleLength, bodyID, hitNormal);
 		if (m_IsGrounded) {
 			m_GroundNormal = Core::Vec3{ hitNormal.GetX(), hitNormal.GetY(), hitNormal.GetZ() };
 		}
